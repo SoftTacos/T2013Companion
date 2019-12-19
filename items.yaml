@@ -1,14 +1,23 @@
 #256
 rangedWeapons:
-  - 
-    name: AKM
+  AKM:
     speed: 3
-  -
-    name: AK74
+    damage: 3
+    bulk: 3
+    weight: 7.5
+  AK74:
     speed: 3
+    damage: 3
+    bulk: 3
+    weight: 7.0
+  
+meleeWeapons:
+  baseballBat:
+    speed: 5
 consumables:
-  -
-    name: vodka
+  vodka:
+    vodkaData: blyat
 
 misc:
-
+  pillow:
+    weight: 10

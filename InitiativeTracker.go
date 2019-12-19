@@ -6,7 +6,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"container/list"
 	"fmt"
 	"io/ioutil"
@@ -17,15 +16,13 @@ import (
 	"sort"
 	"strconv"
 	"time"
-
-	"github.com/go-yaml/yaml"
 )
 
 var randy *rand.Rand
 var rules Rules
 var globals Globals
-var itemData map[string]Item //this holds the item "definitions", same struct as the items players have, except player's items are "instances"
-var weapons []WeaponItem     //placeholder until item system scope is known
+var itemData map[string]Item //this holds the item "definitions", same struct as the items players have, TODO: Make player's weapons "instances" so they can eventually have stats like "status"
+//var weapons []RangedWeaponItem //placeholder until item system scope is known
 
 type Rules struct {
 	EncMap        map[string]uint8 //encumbrance map of name to initiative value
@@ -50,93 +47,6 @@ func (r *Rules) Init() {
 		4: Turn_Communicate,
 		5: Turn_Reload,
 	}
-}
-
-type Character struct {
-	Name          string
-	Stats         map[string]uint8 //name->level
-	Items         map[string]Item
-	CurrentWeapon *WeaponItem //placeholder, will be removed and replaced with an item specific call
-}
-
-func (c *Character) Init() {
-	c.Name = "BLANK"
-	c.Stats = map[string]uint8{
-		"AWA":  0,
-		"CDN":  0,
-		"FIT":  0,
-		"MUS":  0,
-		"COG":  0,
-		"EDU":  0,
-		"PER":  0,
-		"RES":  0,
-		"CUF":  0, //DONT USE
-		"OODA": 0, //DONT USE
-	}
-	//c.Gear = make(map[string]float32)
-}
-
-func (c *Character) InitiativeCheck() uint8 {
-	encIni := rules.EncMap[c.Encumbrance()]
-	roll := advantage(nd20(2))
-
-	//initiative is 2d20 VS OODA, OODA is TN
-	checkMargin := (int(c.Stats["AWA"]) - int(roll))
-	if checkMargin < 0 {
-		return encIni
-	}
-	return encIni + uint8(checkMargin)*2
-}
-
-func (c *Character) Encumbrance() string {
-	return ""
-}
-
-type Item interface {
-	GetType() string
-	GetWeight() float32
-}
-
-type MiscItem struct {
-	Name   string
-	weight float32
-}
-
-func (m *MiscItem) GetType() string    { return "misc" }
-func (m *MiscItem) GetWeight() float32 { return m.weight }
-
-type WeaponItem struct {
-	Name   string
-	Speed  int
-	Damage int
-	Bulk   int
-	weight float32
-}
-
-func (w *WeaponItem) GetType() string    { return "weapon" }
-func (w *WeaponItem) GetWeight() float32 { return w.weight }
-
-/*
-func randomChar(max int, min int) *Character {
-	randName := strconv.Itoa(randy.Int() % 10000)
-	stats := make([]uint8, 10)
-	for i := 0; i < 10; i++ {
-		stats[i] = uint8(randy.Int()%(max-min) + min)
-	}
-	weapon := &Weapon{
-		Name:   "ASDF",
-		Speed:  3,
-		Damage: 5,
-		Bulk:   3,
-	}
-	randomChar := createChar(randName, stats, weapon)
-	return randomChar
-}
-*/
-
-type Turn struct {
-	Init int
-	Char *Character
 }
 
 type Globals struct {
@@ -167,43 +77,6 @@ func NumberMenu(max uint) uint {
 	return validOption
 }
 
-func TakeTurn(turn *Turn) {
-	//fmt.Printf("\n\t%s's turn:%d\n", turn.Char.Name, turn.Init)
-	validRange := uint(5) //lazy!
-	fmt.Printf("\n\t%s's turn:%d\n1:Attack\n2:Move\n3:Change Stance\n4:Communicate\n5:Reload\n", turn.Char.Name, turn.Init)
-	choice := NumberMenu(validRange)
-	rules.TurnActions[choice](turn)
-}
-
-func Turn_Attack(turn *Turn) {
-	fmt.Println("ATTACKING")
-	turn.Init -= turn.Char.CurrentWeapon.Speed
-}
-
-func Turn_ChangeStance(turn *Turn) {
-	fmt.Println("STANCE")
-	turn.Init -= 2 //stance changes are static cost of 2
-}
-
-func Turn_Communicate(turn *Turn) {
-	fmt.Println("COMMUNICATE")
-	turn.Init -= int(NumberMenu(20))
-}
-
-func Turn_Reload(turn *Turn) {
-	fmt.Println("RELOAD")
-	turn.Init -= turn.Char.CurrentWeapon.Bulk
-}
-
-func Turn_Move(turn *Turn) {
-	fmt.Println("MOVE")
-
-}
-
-func check() uint8 {
-	return 0
-}
-
 func advantage(rolls []uint8) uint8 {
 	lowest := rolls[0]
 	for i, _ := range rolls {
@@ -226,21 +99,22 @@ func d20() uint8 {
 	return uint8((randy.Uint64() % 20) + 1)
 }
 
-//reorder not working correctly atm
 func Reorder(inits *list.List) {
-	//fmt.Println("REORDER", inits.Front().Value.(*Turn).Init, inits.Front().Next().Value.(*Turn).Init)
 	init := inits.Front().Value.(*Turn).Init
-	//find first element that is below the Front's init
-	//insert before that element
-	for e := inits.Front(); e != nil; e = e.Next() {
+	for e := inits.Back(); e != nil; e = e.Prev() {
 		turn := e.Value.(*Turn)
-		if turn.Init < init {
-			inits.InsertBefore(inits.Remove(inits.Front()), e)
+
+		if init < turn.Init {
+			fmt.Println("REORDERING")
+			inits.InsertAfter(inits.Remove(inits.Front()), e)
 			break
 		}
-
 	}
 }
+
+/*for e := inits.Front(); e != nil; e = e.Next() {
+	fmt.Println(e.Value)
+}*/
 
 //combat is rounds of EoF, EoF is a series of turns that happen until initiatives all go to 0
 //combat just does one round of EoF
@@ -294,78 +168,14 @@ func LoadTextFile(filename string) []byte {
 	return filestring
 }
 
-func ReadCharacterData(data []byte) []*Character {
-	delimeter := []byte("---")
-	dataSlices := bytes.Split(data, delimeter)
-	characters := make([]*Character, len(dataSlices))
-	itemsTag := "#!items"
-	//characterTag := "#!character"
-
-	for i, charData := range dataSlices { //TODO: Break down into abstracted functions that read each section of character data to allow for flexible parsing of out of order data
-		char := Character{}
-		subSlices := bytes.Split(charData, []byte(itemsTag))
-		//CHARACTER
-		err := yaml.Unmarshal(subSlices[0], &char)
-		if err != nil {
-			log.Fatalf("error: %v", err)
-		}
-		//TODO: Validate character data
-		characters[i] = &char
-		//ITEMS
-		itemsSubset := struct {
-			Items         []string
-			CurrentWeapon string
-		}{}
-
-		err = yaml.Unmarshal(subSlices[1], &itemsSubset)
-		if err != nil {
-			log.Fatalf("error: %v", err)
-		}
-
-		char.Items = make(map[string]Item)
-		for _, curItemName := range itemsSubset.Items {
-			//TODO: validate if the item exists in item list
-			char.Items[curItemName] = itemData[curItemName]
-		}
-
-		fmt.Println(char)
-	}
-	if characters[len(characters)-1].Name == "" {
-		characters = characters[0 : len(characters)-1]
-	}
-	return characters
-}
-
-func ReadWeapons(data []byte) {
-	delimeter := []byte("---")
-	dataSlices := bytes.Split(data, delimeter)
-	weapons = make([]WeaponItem, len(dataSlices))
-
-	for i, wepData := range dataSlices {
-		weapon := WeaponItem{}
-		err := yaml.Unmarshal(wepData, &weapon)
-		if err != nil {
-			log.Fatalf("error: %v", err)
-		}
-		weapons[i] = weapon
-	}
-	if weapons[len(weapons)-1].Name == "" {
-		weapons = weapons[0 : len(weapons)-1]
-	}
-}
-
-func ReadItemData(data []byte) {
-	//itemMap := make(map[string][]map[string]string)
-
-}
-
 func Setup() {
+	itemData = make(map[string]Item)
 	globals.whitespaceRegex = regexp.MustCompile(`\s`)
 	globals.reader = bufio.NewReader(os.Stdin)
 	rules.Init()
 	randy = rand.New(rand.NewSource(time.Now().Unix()))
 	ReadItemData(LoadTextFile("items.yaml"))
-	ReadWeapons(LoadTextFile("weapons.yaml"))
+	//ReadWeapons(LoadTextFile("weapons.yaml"))
 
 }
 
@@ -377,3 +187,21 @@ func main() {
 	initiatives := GenerateInitiatives(characters)
 	Combat(initiatives)
 }
+
+/*
+func randomChar(max int, min int) *Character {
+	randName := strconv.Itoa(randy.Int() % 10000)
+	stats := make([]uint8, 10)
+	for i := 0; i < 10; i++ {
+		stats[i] = uint8(randy.Int()%(max-min) + min)
+	}
+	weapon := &Weapon{
+		Name:   "ASDF",
+		Speed:  3,
+		Damage: 5,
+		Bulk:   3,
+	}
+	randomChar := createChar(randName, stats, weapon)
+	return randomChar
+}
+*/

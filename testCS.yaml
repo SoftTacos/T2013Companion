@@ -15,7 +15,7 @@ stats:
 items:
   - AKM
   - Vodka
-currentWeapon: AKM
+currentweapon: AKM
 
 ---
 #!character
@@ -35,4 +35,24 @@ stats:
 items:
   - AKM
   - Vodka
-currentWeapon: AKM
+currentweapon: AKM
+
+---
+#!character
+name: Max
+stats:
+  AWA:  10
+  CDN:  10
+  FIT:  10
+  MUS:  20
+  COG:  10
+  PER:  20
+  RES:  10
+  EDU:  3
+  CUF:  10 #DONT USE
+  OODA: 10 #DONT USE
+#!items
+items:
+  - AK74
+  - Vodka
+currentweapon: AK74
