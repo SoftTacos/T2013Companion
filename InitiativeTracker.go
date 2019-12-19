@@ -24,7 +24,8 @@ import (
 var randy *rand.Rand
 var rules Rules
 var globals Globals
-var weapons []Weapon //TODO refactor this one scope has settled
+var itemData map[string]Item //this holds the item "definitions", same struct as the items players have, except player's items are "instances"
+var weapons []WeaponItem     //placeholder until item system scope is known
 
 type Rules struct {
 	EncMap        map[string]uint8 //encumbrance map of name to initiative value
@@ -51,35 +52,12 @@ func (r *Rules) Init() {
 	}
 }
 
-type Characters struct {
-	Characters []Character
-}
-
 type Character struct {
-	Name  string
-	Stats map[string]uint8 //name->level
-	Items map[string]Item
-
-	//Gear   map[string]float32 //name->weight
-	//Weapon *Weapon
-
+	Name          string
+	Stats         map[string]uint8 //name->level
+	Items         map[string]Item
+	CurrentWeapon *WeaponItem //placeholder, will be removed and replaced with an item specific call
 }
-
-type Item interface {
-	GetType() string
-	GetWeight() float32
-}
-
-type Weapon struct {
-	Name   string
-	Speed  int
-	Damage int
-	Bulk   int
-	weight float32
-}
-
-func (w *Weapon) GetType() string    { return "weapon" }
-func (w *Weapon) GetWeight() float32 { return w.weight }
 
 func (c *Character) Init() {
 	c.Name = "BLANK"
@@ -114,31 +92,31 @@ func (c *Character) Encumbrance() string {
 	return ""
 }
 
-//there's a DM connection and player connections
-//players can manage their own gear and shit with add/subtract functionality
-//	have ability to drop VS get rid of
-
-func createChar(name string, stats []uint8, weapon *Weapon) *Character {
-	newChar := &Character{
-		Name: name,
-		Stats: map[string]uint8{
-			"AWA":  stats[0],
-			"CDN":  stats[1],
-			"FIT":  stats[2],
-			"MUS":  stats[3],
-			"COG":  stats[4],
-			"PER":  stats[6],
-			"RES":  stats[7],
-			"EDU":  stats[5],
-			"CUF":  stats[8], //DONT USE
-			"OODA": stats[9], //DONT USE
-		},
-		//Gear:   make(map[string]float32),
-		Weapon: weapon,
-	}
-	return newChar
+type Item interface {
+	GetType() string
+	GetWeight() float32
 }
 
+type MiscItem struct {
+	Name   string
+	weight float32
+}
+
+func (m *MiscItem) GetType() string    { return "misc" }
+func (m *MiscItem) GetWeight() float32 { return m.weight }
+
+type WeaponItem struct {
+	Name   string
+	Speed  int
+	Damage int
+	Bulk   int
+	weight float32
+}
+
+func (w *WeaponItem) GetType() string    { return "weapon" }
+func (w *WeaponItem) GetWeight() float32 { return w.weight }
+
+/*
 func randomChar(max int, min int) *Character {
 	randName := strconv.Itoa(randy.Int() % 10000)
 	stats := make([]uint8, 10)
@@ -154,6 +132,7 @@ func randomChar(max int, min int) *Character {
 	randomChar := createChar(randName, stats, weapon)
 	return randomChar
 }
+*/
 
 type Turn struct {
 	Init int
@@ -198,7 +177,7 @@ func TakeTurn(turn *Turn) {
 
 func Turn_Attack(turn *Turn) {
 	fmt.Println("ATTACKING")
-	turn.Init -= turn.Char.Weapon.Speed
+	turn.Init -= turn.Char.CurrentWeapon.Speed
 }
 
 func Turn_ChangeStance(turn *Turn) {
@@ -213,7 +192,7 @@ func Turn_Communicate(turn *Turn) {
 
 func Turn_Reload(turn *Turn) {
 	fmt.Println("RELOAD")
-	turn.Init -= turn.Char.Weapon.Bulk
+	turn.Init -= turn.Char.CurrentWeapon.Bulk
 }
 
 func Turn_Move(turn *Turn) {
@@ -319,15 +298,37 @@ func ReadCharacterData(data []byte) []*Character {
 	delimeter := []byte("---")
 	dataSlices := bytes.Split(data, delimeter)
 	characters := make([]*Character, len(dataSlices))
+	itemsTag := "#!items"
+	//characterTag := "#!character"
 
-	for i, charData := range dataSlices {
+	for i, charData := range dataSlices { //TODO: Break down into abstracted functions that read each section of character data to allow for flexible parsing of out of order data
 		char := Character{}
-		err := yaml.Unmarshal(charData, &char)
+		subSlices := bytes.Split(charData, []byte(itemsTag))
+		//CHARACTER
+		err := yaml.Unmarshal(subSlices[0], &char)
 		if err != nil {
 			log.Fatalf("error: %v", err)
 		}
-		//TODO: Valid character data
+		//TODO: Validate character data
 		characters[i] = &char
+		//ITEMS
+		itemsSubset := struct {
+			Items         []string
+			CurrentWeapon string
+		}{}
+
+		err = yaml.Unmarshal(subSlices[1], &itemsSubset)
+		if err != nil {
+			log.Fatalf("error: %v", err)
+		}
+
+		char.Items = make(map[string]Item)
+		for _, curItemName := range itemsSubset.Items {
+			//TODO: validate if the item exists in item list
+			char.Items[curItemName] = itemData[curItemName]
+		}
+
+		fmt.Println(char)
 	}
 	if characters[len(characters)-1].Name == "" {
 		characters = characters[0 : len(characters)-1]
@@ -338,10 +339,10 @@ func ReadCharacterData(data []byte) []*Character {
 func ReadWeapons(data []byte) {
 	delimeter := []byte("---")
 	dataSlices := bytes.Split(data, delimeter)
-	weapons = make([]Weapon, len(dataSlices))
+	weapons = make([]WeaponItem, len(dataSlices))
 
 	for i, wepData := range dataSlices {
-		weapon := Weapon{}
+		weapon := WeaponItem{}
 		err := yaml.Unmarshal(wepData, &weapon)
 		if err != nil {
 			log.Fatalf("error: %v", err)
@@ -353,11 +354,17 @@ func ReadWeapons(data []byte) {
 	}
 }
 
+func ReadItemData(data []byte) {
+	//itemMap := make(map[string][]map[string]string)
+
+}
+
 func Setup() {
 	globals.whitespaceRegex = regexp.MustCompile(`\s`)
 	globals.reader = bufio.NewReader(os.Stdin)
 	rules.Init()
 	randy = rand.New(rand.NewSource(time.Now().Unix()))
+	ReadItemData(LoadTextFile("items.yaml"))
 	ReadWeapons(LoadTextFile("weapons.yaml"))
 
 }

@@ -1,53 +1,38 @@
-#character 1
-name: testy
+#!character
+name: Moose
 stats:
-  AWA:  10
-  CDN:  10
+  AWA:  15
+  CDN:  8
   FIT:  10
   MUS:  10
   COG:  10
-  PER:  10
+  PER:  15
   RES:  10
-  EDU:  10
+  EDU:  2
   CUF:  10 #DONT USE
   OODA: 10 #DONT USE
+#!items
 items:
-  - data:
-      type: weapon
-      name: akm
-      speed: 3
-      damage: 3
-      bulk: 3
-  - data:
-      type: consumable
-      name: hamburger
+  - AKM
+  - Vodka
+currentWeapon: AKM
 
 ---
-#character 2
-name: TEST2
+#!character
+name: Luna
 stats:
   AWA:  10
   CDN:  10
   FIT:  10
-  MUS:  10
+  MUS:  20
   COG:  10
-  PER:  10
+  PER:  20
   RES:  10
-  EDU:  10
+  EDU:  3
   CUF:  10 #DONT USE
   OODA: 10 #DONT USE
-
----
-name: TEST3
-stats:
-  AWA:  10
-  CDN:  10
-  FIT:  10
-  MUS:  10
-  COG:  10
-  PER:  10
-  RES:  10
-  EDU:  10
-  CUF:  10 #DONT USE
-  OODA: 10 #DONT USE
-
+#!items
+items:
+  - AKM
+  - Vodka
+currentWeapon: AKM

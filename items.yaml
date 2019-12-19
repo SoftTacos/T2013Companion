@@ -1,0 +1,14 @@
+#256
+rangedWeapons:
+  - 
+    name: AKM
+    speed: 3
+  -
+    name: AK74
+    speed: 3
+consumables:
+  -
+    name: vodka
+
+misc:
+
