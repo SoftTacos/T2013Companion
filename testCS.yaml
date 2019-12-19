@@ -1,0 +1,53 @@
+#character 1
+name: testy
+stats:
+  AWA:  10
+  CDN:  10
+  FIT:  10
+  MUS:  10
+  COG:  10
+  PER:  10
+  RES:  10
+  EDU:  10
+  CUF:  10 #DONT USE
+  OODA: 10 #DONT USE
+items:
+  - data:
+      type: weapon
+      name: akm
+      speed: 3
+      damage: 3
+      bulk: 3
+  - data:
+      type: consumable
+      name: hamburger
+
+---
+#character 2
+name: TEST2
+stats:
+  AWA:  10
+  CDN:  10
+  FIT:  10
+  MUS:  10
+  COG:  10
+  PER:  10
+  RES:  10
+  EDU:  10
+  CUF:  10 #DONT USE
+  OODA: 10 #DONT USE
+
+---
+name: TEST3
+stats:
+  AWA:  10
+  CDN:  10
+  FIT:  10
+  MUS:  10
+  COG:  10
+  PER:  10
+  RES:  10
+  EDU:  10
+  CUF:  10 #DONT USE
+  OODA: 10 #DONT USE
+

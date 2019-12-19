@@ -1,0 +1,10 @@
+name: AKM
+speed: 3
+Damage: 3
+Bulk: 3
+---
+name: AK74
+speed: 3
+damage: 3
+bulk: 2
+---
