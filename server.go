@@ -1,10 +1,13 @@
 package main
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
 	"html"
+	"html/template"
+	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -16,6 +19,7 @@ var router *mux.Router
 func SetupServer() {
 	pages = make(map[string][]byte)
 	pages["CharSelectPage"] = LoadTextFile("pages\\CharSelect.html")
+	pages["CharacterPage"] = LoadTextFile("pages\\Character.html")
 	router = mux.NewRouter()
 	SetRoutes()
 }
@@ -35,7 +39,7 @@ func SetRoutes() {
 	router.HandleFunc("/select/options", CharactersResponse)
 	router.HandleFunc("/dm", DMPage)
 	router.HandleFunc("/dmSocket", DMSocket)
-	router.HandleFunc("/player/{[A-Za-z]+}", PlayerPage)
+	router.HandleFunc("/player/{[A-Za-z]+}", CharacterPage)
 	router.HandleFunc("/playerSocket", PlayerSocket)
 
 	http.Handle("/", router)
@@ -68,15 +72,28 @@ func DMSocket(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "DM SOCKET")
 }
 
-func PlayerPage(w http.ResponseWriter, r *http.Request) {
+func CharacterPage(w http.ResponseWriter, r *http.Request) {
+	page := pages["CharacterPage"]
 	charName := strings.Split(html.EscapeString(r.URL.Path), "/")[2]
 	//TODO: Validate if character even exists
 	charData := characters[charName]
-	charJSON, err := json.Marshal(charData)
-	if err != nil {
-		fmt.Println("Error:", err)
+	page = bytes.Replace(page, []byte("##NAME##"), []byte(charData.Name), 1)
+	stats := [2][]string{}
+	for key, val := range charData.Stats {
+		stats[0] = append(stats[0], string(key))
+		stats[1] = append(stats[1], strconv.FormatUint(uint64(val), 8))
 	}
-	fmt.Fprintf(w, string(charJSON))
+	t := template.Must(template.New("").Parse(`<tr>{{range .}}<th>{{.}}</th>{{end}}</tr>`))
+	var str strings.Builder
+	if err := t.Execute(&str, stats[0]); err != nil {
+		log.Fatal(err)
+	}
+	if err := t.Execute(&str, stats[1]); err != nil {
+		log.Fatal(err)
+	}
+
+	page = bytes.Replace(page, []byte("##STATS##"), []byte(str.String()), 1)
+	fmt.Fprintf(w, string(page))
 }
 
 func PlayerSocket(w http.ResponseWriter, r *http.Request) {
