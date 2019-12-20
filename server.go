@@ -6,6 +6,7 @@ import (
 	"html"
 	"html/template"
 	"log"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -18,25 +19,29 @@ var router *mux.Router
 
 func SetupServer() {
 	pages = make(map[string][]byte)
-	pages["CharSelectPage"] = LoadTextFile("pages\\CharSelect.html")
+	pages["CharacterSelectPage"] = LoadTextFile("pages\\CharSelect.html")
 	pages["CharacterPage"] = LoadTextFile("pages\\Character.html")
 	router = mux.NewRouter()
 	SetRoutes()
+	//@@@@@@@@
+	fmt.Println(GetOutboundIP())
+	//@@@@@@@@@
+}
+
+func GetOutboundIP() net.IP {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	return localAddr.IP
 }
 
 func SetRoutes() {
-	/*
-		http.HandleFunc("/", BlankPage)
-		http.HandleFunc("/select", CharSelectPage)
-		http.HandleFunc("/select/options", CharactersResponse)
-		http.HandleFunc("/dm", DMPage)
-		http.HandleFunc("/dmSocket", DMSocket)
-		http.HandleFunc("/player", PlayerPage)
-		http.HandleFunc("/playerSocket", PlayerSocket)
-	*/
 	router.HandleFunc("/", BlankPage)
 	router.HandleFunc("/select", CharSelectPage)
-	router.HandleFunc("/select/options", CharactersResponse)
+	//router.HandleFunc("/select/options", CharactersResponse)
 	router.HandleFunc("/dm", DMPage)
 	router.HandleFunc("/dmSocket", DMSocket)
 	router.HandleFunc("/player/{[A-Za-z]+}", CharacterPage)
@@ -51,12 +56,27 @@ func BlankPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "BLANK")
 }
 
-//fmt.Fprintf(w, string(visualizerPageHTML))
+//TODO:this is super gross and janky, will be refactoring all the page preprocessing once scope is known
+//TODO: Consider pre-processing these once and storing them rather than each time page is requested
 func CharSelectPage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, string(pages["CharSelectPage"]))
+	fmt.Println("Character Select")
+	charNames := []string{}
+	for _, char := range characters {
+		charNames = append(charNames, char.Name)
+	}
+
+	t := template.Must(template.New("").Parse(`{{range .}}<li><a href="player/{{.}}">{{.}}</a></li>{{end}}`)) //<li><a href="#">HTML</a></li>
+	var str strings.Builder
+	if err := t.Execute(&str, charNames); err != nil {
+		log.Fatal(err)
+	}
+	page := pages["CharacterSelectPage"]
+	page = bytes.Replace(page, []byte("##OPTIONS##"), []byte(str.String()), 1)
+	fmt.Fprintf(w, string(page))
 }
 
 func CharactersResponse(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Character Response")
 	chars := []byte("DM")
 	for _, char := range characters {
 		chars = append(chars, []byte(" "+char.Name)...)
@@ -65,6 +85,7 @@ func CharactersResponse(w http.ResponseWriter, r *http.Request) {
 }
 
 func DMPage(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("DM PAge")
 	fmt.Fprintf(w, "DM PAGE")
 }
 
@@ -72,9 +93,11 @@ func DMSocket(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "DM SOCKET")
 }
 
+//this is super gross and janky, will be refactoring all the page preprocessing once scope is known
 func CharacterPage(w http.ResponseWriter, r *http.Request) {
 	page := pages["CharacterPage"]
 	charName := strings.Split(html.EscapeString(r.URL.Path), "/")[2]
+	fmt.Println("Character Page: ", charName)
 	//TODO: Validate if character even exists
 	charData := characters[charName]
 	page = bytes.Replace(page, []byte("##NAME##"), []byte(charData.Name), 1)

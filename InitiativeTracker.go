@@ -6,6 +6,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -82,6 +83,7 @@ func refresh() {
 	for {
 		time.Sleep(1 * time.Second)
 		pages["CharSelectPage"] = LoadTextFile("pages\\CharSelect.html")
+		pages["CharacterPage"] = LoadTextFile("pages\\Character.html")
 		//fmt.Println("REFRESH")
 
 	}
@@ -92,6 +94,7 @@ func main() {
 	SetupServer()
 	ReadCharacterData(LoadTextFile("testCS.yaml"))
 	go refresh() //im lazy
+	fmt.Println("STARTING SERVER")
 	log.Fatal(http.ListenAndServe(":8082", nil))
 
 	//initiatives := GenerateInitiatives(characters)
