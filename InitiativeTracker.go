@@ -23,9 +23,10 @@ var itemData map[string]Item //this holds the item "definitions", same struct as
 var characters map[string]*Character
 
 type Rules struct {
-	EncMap        map[string]uint8 //encumbrance map of name to initiative value
-	SkillLevelMap map[uint8]uint8  //skill level to #d20 to roll: 25->2d20
-	TurnActions   map[uint]func(*Turn)
+	EncMap        map[string]uint8     //encumbrance map of name to initiative value
+	SkillLevelMap map[uint8]uint8      //skill level to #d20 to roll: 25->2d20
+	StatNames     [10]string           //not sure where to put this so it goes in rules for now
+	TurnActions   map[uint]func(*Turn) //
 }
 
 func (r *Rules) Init() {
@@ -45,6 +46,7 @@ func (r *Rules) Init() {
 		4: Turn_Communicate,
 		5: Turn_Reload,
 	}
+	r.StatNames = [10]string{"AWA", "CDN", "FIT", "MUS", "COG", "EDU", "PER", "RES", "CUF", "OODA"}
 }
 
 type Globals struct {
@@ -79,12 +81,12 @@ func SetupGame() {
 
 }
 
+//refresh the pages so I don't have to restart the server every time I update a page
 func refresh() {
 	for {
 		time.Sleep(1 * time.Second)
 		pages["CharSelectPage"] = LoadTextFile("pages\\CharSelect.html")
 		pages["CharacterPage"] = LoadTextFile("pages\\Character.html")
-		//fmt.Println("REFRESH")
 
 	}
 }

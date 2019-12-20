@@ -101,17 +101,18 @@ func CharacterPage(w http.ResponseWriter, r *http.Request) {
 	//TODO: Validate if character even exists
 	charData := characters[charName]
 	page = bytes.Replace(page, []byte("##NAME##"), []byte(charData.Name), 1)
-	stats := [2][]string{}
-	for key, val := range charData.Stats {
-		stats[0] = append(stats[0], string(key))
-		stats[1] = append(stats[1], strconv.FormatUint(uint64(val), 8))
+	stats := [10]string{}
+	for i, _ := range rules.StatNames { //key, val := range charData.Stats
+		stat := strconv.FormatUint(uint64(charData.Stats[rules.StatNames[i]]), 8)
+		stats[i] = stat
 	}
-	t := template.Must(template.New("").Parse(`<tr>{{range .}}<th>{{.}}</th>{{end}}</tr>`))
+	format := `<tr>{{range .}}<th>{{.}}</th>{{end}}</tr>`
+	t := template.Must(template.New("").Parse(format))
 	var str strings.Builder
-	if err := t.Execute(&str, stats[0]); err != nil {
+	if err := t.Execute(&str, rules.StatNames); err != nil {
 		log.Fatal(err)
 	}
-	if err := t.Execute(&str, stats[1]); err != nil {
+	if err := t.Execute(&str, stats); err != nil {
 		log.Fatal(err)
 	}
 
@@ -123,7 +124,7 @@ func PlayerSocket(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "PLAYER SOCKET")
 }
 
-func PageProcessor(page []byte) {
+func PageProcessor(page []byte, tag []byte, format string) {
 
 }
 
