@@ -41,6 +41,10 @@ func (c *Character) Encumbrance() string {
 }
 
 func (c *Character) SetCurrentWeapon(name string) bool {
+	_, ok := c.Items[name]
+	if !ok {
+		return false
+	}
 	c.CurrentWeapon = c.Items[name].(*RangedWeaponItem)
-	return true //TODO: Return false if weapon doesn't in inventory
+	return true
 }

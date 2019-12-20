@@ -39,10 +39,19 @@ func ReadCharacterData(data []byte) []*Character {
 
 		char.Items = make(map[string]Item)
 		for _, curItemName := range itemsSubset.Items {
-			//TODO: validate if the item exists in item list
+			fmt.Println("\"", curItemName, "\"")
+			_, ok := itemData[curItemName]
+			if !ok {
+				fmt.Println("Error: Item does not exist in items list: \"", curItemName, "\"")
+				continue
+			}
 			char.Items[curItemName] = itemData[curItemName]
 		}
-		//TODO: Check if character even HAS the current weapon
+		_, ok := char.Items[itemsSubset.CurrentWeapon]
+		if !ok {
+			fmt.Println("Error: Character doesn't have item in their inventory: \"", itemsSubset.CurrentWeapon, "\"")
+			continue
+		}
 		char.SetCurrentWeapon(itemsSubset.CurrentWeapon)
 
 	}
@@ -60,10 +69,12 @@ func ReadItemData(data []byte) {
 	}
 	//fmt.Println(itemData)
 	SetupRangedWeapons(itemData["rangedWeapons"])
-	//SetupMeleeWeapons
-	//SetupConsumables
-	//SetupMisc
+	SetupMeleeWeapons(itemData["meleeWeapons"])
+	SetupConsumables(itemData["consumables"])
+	SetupMisc(itemData["misc"])
 }
+
+//TODO: Consuder switching to type-switch
 
 //var itemData map[string]Item
 func SetupRangedWeapons(weaponData map[string]map[string]string) {
@@ -81,27 +92,50 @@ func SetupRangedWeapons(weaponData map[string]map[string]string) {
 			Bulk:   uint8(pBulk),
 			weight: float32(pWeight),
 		}
-		fmt.Println(wepName, wep)
 		itemData[wepName] = &wep
 	}
 }
 
-/*
-func ReadWeapons(data []byte) {
-	delimeter := []byte("---")
-	dataSlices := bytes.Split(data, delimeter)
-	weapons = make([]RangedWeaponItem, len(dataSlices))
+func SetupMeleeWeapons(weaponData map[string]map[string]string) {
+	for wepName := range weaponData {
+		currentWeaponData := weaponData[wepName]
+		pSpeed, _ := strconv.ParseUint(currentWeaponData["speed"], 10, 64)
+		pDamage, _ := strconv.ParseUint(currentWeaponData["damage"], 10, 64)
+		pWeight, _ := strconv.ParseFloat(currentWeaponData["weight"], 32)
 
-	for i, wepData := range dataSlices {
-		weapon := RangedWeaponItem{}
-		err := yaml.Unmarshal(wepData, &weapon)
-		if err != nil {
-			log.Fatalf("error: %v", err)
+		wep := MeleeWeaponItem{
+			Name:   wepName,
+			Speed:  uint8(pSpeed),
+			Damage: uint8(pDamage),
+			weight: float32(pWeight),
 		}
-		weapons[i] = weapon
-	}
-	if weapons[len(weapons)-1].Name == "" {
-		weapons = weapons[0 : len(weapons)-1]
+		itemData[wepName] = &wep
 	}
 }
-*/
+
+func SetupConsumables(data map[string]map[string]string) {
+	for name := range data {
+		currentItemData := data[name]
+		pWeight, _ := strconv.ParseFloat(currentItemData["weight"], 32)
+		pAmount, _ := strconv.ParseFloat(currentItemData["amount"], 32)
+
+		item := ConsumableItem{
+			Name:   name,
+			Amount: float32(pAmount),
+			weight: float32(pWeight),
+		}
+		itemData[name] = &item
+	}
+}
+
+func SetupMisc(data map[string]map[string]string) {
+	for name := range data {
+		currentItemData := data[name]
+		pWeight, _ := strconv.ParseFloat(currentItemData["weight"], 32)
+		item := MiscItem{
+			Name:   name,
+			weight: float32(pWeight),
+		}
+		itemData[name] = &item
+	}
+}

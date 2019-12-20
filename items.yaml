@@ -14,9 +14,12 @@ rangedWeapons:
 meleeWeapons:
   baseballBat:
     speed: 5
+    damage: 1
+    weight: 5.0
+
 consumables:
-  vodka:
-    vodkaData: blyat
+  Vodka:
+    amount: 200 #ml
 
 misc:
   pillow:
