@@ -9,14 +9,14 @@ import (
 	"github.com/go-yaml/yaml"
 )
 
-func ReadCharacterData(data []byte) []*Character {
+func ReadCharacterData(data []byte) {
 	delimeter := []byte("---")
 	dataSlices := bytes.Split(data, delimeter)
-	characters := make([]*Character, len(dataSlices))
+	characters = make(map[string]*Character) //make([]*Character, len(dataSlices))
 	itemsTag := "#!items"
 	//characterTag := "#!character"
 
-	for i, charData := range dataSlices { //TODO: Break down into abstracted functions that read each section of character data to allow for flexible parsing of out of order data
+	for _, charData := range dataSlices { //TODO: Break down into abstracted functions that read each section of character data to allow for flexible parsing of out of order data
 		char := Character{}
 		subSlices := bytes.Split(charData, []byte(itemsTag))
 		//CHARACTER
@@ -25,7 +25,7 @@ func ReadCharacterData(data []byte) []*Character {
 			log.Fatalf("error: %v", err)
 		}
 		//TODO: Validate character data
-		characters[i] = &char
+		characters[char.Name] = &char
 		//ITEMS
 		itemsSubset := struct {
 			Items         []string
@@ -39,7 +39,6 @@ func ReadCharacterData(data []byte) []*Character {
 
 		char.Items = make(map[string]Item)
 		for _, curItemName := range itemsSubset.Items {
-			fmt.Println("\"", curItemName, "\"")
 			_, ok := itemData[curItemName]
 			if !ok {
 				fmt.Println("Error: Item does not exist in items list: \"", curItemName, "\"")
@@ -55,10 +54,13 @@ func ReadCharacterData(data []byte) []*Character {
 		char.SetCurrentWeapon(itemsSubset.CurrentWeapon)
 
 	}
-	if characters[len(characters)-1].Name == "" {
-		characters = characters[0 : len(characters)-1]
-	}
-	return characters
+	//TODO: REFACTOR THIS FOR CHAR MAP
+	/*
+		if characters[len(characters)-1].Name == "" {
+			characters = characters[0 : len(characters)-1]
+		}
+	*/
+
 }
 
 func ReadItemData(data []byte) {
@@ -138,4 +140,25 @@ func SetupMisc(data map[string]map[string]string) {
 		}
 		itemData[name] = &item
 	}
+}
+
+func NumberMenu(max uint) uint {
+	var validOption uint
+	for validNumber := false; !validNumber; {
+		input, _ := globals.reader.ReadString('\n')
+		input = globals.whitespaceRegex.ReplaceAllString(input, "")
+		option, err := strconv.ParseUint(input, 10, 64)
+		if err != nil {
+			fmt.Println(err)
+			print("Input could not be read as a number, please provide a valid number\n")
+			continue
+		}
+		if uint(option) > max {
+			print("Input was too high\n")
+			continue
+		}
+		validOption = uint(option)
+		validNumber = true
+	}
+	return validOption
 }
