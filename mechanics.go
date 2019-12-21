@@ -60,13 +60,14 @@ func Combat(inits *list.List) {
 }
 
 //todo: will want to just generate the list and sort it later, mostly as an exercise in LinkedList sorting
-func GenerateInitiatives(chars []*Character) *list.List {
-	initiatives := make([]*Turn, len(chars))
-	for i, _ := range chars {
-		initiatives[i] = &Turn{
-			Init: int(chars[i].InitiativeCheck()),
-			Char: chars[i],
-		}
+func GenerateInitiatives(chars map[string]*Character) *list.List {
+	initiatives := []*Turn{}
+	for _, value := range chars {
+		initiatives = append(initiatives,
+			&Turn{
+				Init: int(value.InitiativeCheck()),
+				Char: value,
+			})
 	}
 	sort.Slice(initiatives, func(i, j int) bool { return initiatives[i].Init > initiatives[j].Init })
 	initList := list.New()

@@ -1,41 +1,81 @@
 <html lang="en">
 
 <head>
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 </head>
 
 <body>
-  <div class="jumbotron text-center">
-    <h1>##NAME##</h1>
+  <div class="container-fluid text-center p-3 my-3 border">
+    <div class="row" id="name">
+      <h3>##NAME##</h3>
+    </div>
   </div>
 
-  <div class="container-fluid">
-    <div class="row" id="stats">
-      <div class="container-fluid">
-        <div class="card-body">
-          <div class="table-responsive" id="stat-table">
+  <div class="container">
+    <div class="row p-3 my-3 border">
+      <div class="col-4 col-sm-4 col-md-3 col-lg-2 col-xl-2">
+        <table class="table-striped ">
+
+          ##STATS##
+        </table>
+      </div>
+
+      <div class="col" id="equipped">
+        <div class="container-fluid">
+          <div class="table-responsive">
             <table class="table table-bordered table-hover table-responsive">
-              <thead>
-                ##STATS##
-              </thead>
+              <tr>
+                <th class="text-center">PLACEHOLDER</th>
+                <th class="text-center">PLACEHOLDER</th>
+              </tr>
+              ##CURRENT_WEAPON##
             </table>
           </div>
         </div>
+
+        <div class="container-fluid">
+          ##ITEMS##
+          v-card v-card--hover v-card--link v-sheet theme--light
+        </div>
       </div>
     </div>
-    <div class="row" id="equipped">
-      ##EQUIPPED##
-    </div>
   </div>
-  <!--container fluid-->
 </body>
 
 </html>
 
-<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script>
+  //let socket = new WebSocket("ws://localhost:8082/visualizerSocket");
 
 </script>
+<style>
+  /* Increase all font sizes on mobile */
+  @media (max-width: 767px) {
+    body {
+      /* default is 1rem or 16px */
+      font-size: 25px;
+    }
+
+  }
+
+  @media (max-width: 767px) {
+    body {
+      /* default is 1rem or 16px */
+      font-size: 25px;
+    }
+
+  }
+
+  #stats-container {
+    min-width: 800px;
+    width: auto !important;
+    width: 300px;
+  }
+
+  .text-center {}
+</style>

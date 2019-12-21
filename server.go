@@ -23,9 +23,7 @@ func SetupServer() {
 	pages["CharacterPage"] = LoadTextFile("pages\\Character.html")
 	router = mux.NewRouter()
 	SetRoutes()
-	//@@@@@@@@
-	fmt.Println(GetOutboundIP())
-	//@@@@@@@@@
+	fmt.Println("STARTED; IP:", GetOutboundIP())
 }
 
 func GetOutboundIP() net.IP {
@@ -41,10 +39,10 @@ func GetOutboundIP() net.IP {
 func SetRoutes() {
 	router.HandleFunc("/", BlankPage)
 	router.HandleFunc("/select", CharSelectPage)
-	//router.HandleFunc("/select/options", CharactersResponse)
 	router.HandleFunc("/dm", DMPage)
 	router.HandleFunc("/dmSocket", DMSocket)
 	router.HandleFunc("/player/{[A-Za-z]+}", CharacterPage)
+	router.HandleFunc("/player/{[A-Za-z]+}/edit", CharacterEditPage)
 	router.HandleFunc("/playerSocket", PlayerSocket)
 
 	http.Handle("/", router)
@@ -75,15 +73,6 @@ func CharSelectPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(page))
 }
 
-func CharactersResponse(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Character Response")
-	chars := []byte("DM")
-	for _, char := range characters {
-		chars = append(chars, []byte(" "+char.Name)...)
-	}
-	fmt.Fprintf(w, string(chars))
-}
-
 func DMPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("DM PAge")
 	fmt.Fprintf(w, "DM PAGE")
@@ -101,23 +90,25 @@ func CharacterPage(w http.ResponseWriter, r *http.Request) {
 	//TODO: Validate if character even exists
 	charData := characters[charName]
 	page = bytes.Replace(page, []byte("##NAME##"), []byte(charData.Name), 1)
-	stats := [10]string{}
+	var strBuilder strings.Builder
+
 	for i, _ := range rules.StatNames { //key, val := range charData.Stats
 		stat := strconv.FormatUint(uint64(charData.Stats[rules.StatNames[i]]), 8)
-		stats[i] = stat
+		fmt.Fprintf(&strBuilder, `<tr class="text-center"><td class="container-fluid">`+rules.StatNames[i]+`</td><td class="container-fluid">`+stat+`</td></tr>`)
 	}
-	format := `<tr>{{range .}}<th>{{.}}</th>{{end}}</tr>`
-	t := template.Must(template.New("").Parse(format))
-	var str strings.Builder
-	if err := t.Execute(&str, rules.StatNames); err != nil {
-		log.Fatal(err)
-	}
-	if err := t.Execute(&str, stats); err != nil {
-		log.Fatal(err)
-	}
+	page = bytes.Replace(page, []byte("##STATS##"), []byte(strBuilder.String()), 1)
+	page = bytes.Replace(page, []byte("##CURRENT_WEAPON##"), []byte(generateItemCard(charData.CurrentWeapon)), 1)
 
-	page = bytes.Replace(page, []byte("##STATS##"), []byte(str.String()), 1)
 	fmt.Fprintf(w, string(page))
+}
+
+func generateItemCard(item Item) string {
+
+	return ""
+}
+
+func CharacterEditPage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "CHARACTER EDIT")
 }
 
 func PlayerSocket(w http.ResponseWriter, r *http.Request) {

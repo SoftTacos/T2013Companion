@@ -96,10 +96,9 @@ func main() {
 	SetupServer()
 	ReadCharacterData(LoadTextFile("testCS.yaml"))
 	go refresh() //im lazy
-	fmt.Println("STARTING SERVER")
-	log.Fatal(http.ListenAndServe(":8082", nil))
-
-	//initiatives := GenerateInitiatives(characters)
-	//Combat(initiatives)
+	go http.ListenAndServe(":8082", nil)
+	fmt.Println("COMBAT")
+	initiatives := GenerateInitiatives(characters)
+	Combat(initiatives)
 
 }
