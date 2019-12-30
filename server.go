@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 )
 
 var pages map[string][]byte
@@ -23,6 +24,7 @@ func SetupServer() {
 	pages["CharacterPage"] = LoadTextFile("pages\\Character.html")
 	pages["ItemCard"] = LoadTextFile("pages\\ItemCard.html")
 	pages["SkillChartElement"] = LoadTextFile("pages\\SkillChartElement.html")
+	pages["StatusChart"] = LoadTextFile("pages\\StatusChart.html")
 
 	router = mux.NewRouter()
 	SetRoutes()
@@ -43,15 +45,13 @@ func SetRoutes() {
 	router.HandleFunc("/", BlankPage)
 	router.HandleFunc("/select", CharSelectPage)
 	router.HandleFunc("/dm", DMPage)
-	router.HandleFunc("/dmSocket", DMSocket)
+	router.HandleFunc("/dm/socket", DMSocket)
 	router.HandleFunc("/player/{[A-Za-z]+}", CharacterPage)
 	router.HandleFunc("/player/{[A-Za-z]+}/edit", CharacterEditPage)
-	router.HandleFunc("/playerSocket", PlayerSocket)
+	router.HandleFunc("/player/{[A-Za-z]+}/socket", PlayerSocket)
 
 	http.Handle("/", router)
 }
-
-//PAGE FUNCTIONS
 
 func BlankPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "BLANK")
@@ -102,6 +102,7 @@ func CharacterPage(w http.ResponseWriter, r *http.Request) {
 	page = bytes.Replace(page, []byte("##SKILLS##"), generateSkillChart(charData), 1)
 	page = bytes.Replace(page, []byte("##CURRENT_WEAPON##"), generateCurrentWeaponCard(charData.CurrentWeapon), 1)
 	page = bytes.Replace(page, []byte("##ITEMS##"), generateHtmlItemList(charData), 1)
+	page = bytes.Replace(page, []byte("##STATUSCHART##"), pages["StatusChart"], 1)
 
 	fmt.Fprintf(w, string(page))
 }
@@ -116,13 +117,6 @@ func generateStatChart(char *Character) []byte {
 }
 
 func generateSkillChart(char *Character) []byte {
-	/*chart := make([]byte, 450)
-	for _, skillName := range rules.SkillNames {
-		skill := strconv.FormatUint(uint64(char.Skills[skillName]), 8)
-		chart = append(chart, []byte(`<div class="col-4 border pt-0">`+skillName+` `+skill+`</div>`)...) //TODO: make them format like a table
-	}
-	return chart
-	*/
 	chart := make([]byte, len(pages["SkillChartElement"])*30)
 	for _, skillName := range rules.SkillNames {
 		element := pages["SkillChartElement"]
@@ -142,16 +136,15 @@ func generateCurrentWeaponCard(item Item) []byte {
 	newPage = bytes.Replace(newPage, []byte("##NAME##"), []byte(item.GetName()), 1)
 	newPage = bytes.Replace(newPage, []byte("##TYPE##"), []byte(item.GetType()), 1)
 	newPage = bytes.Replace(newPage, []byte("##DESCRIPTION##"), []byte(item.GetDescription()), 1)
-	return newPage //strBuilder.String()
+	return newPage
 }
 
 func generateHtmlItemList(char *Character) []byte {
 	list := make([]byte, 1000) //TODO
 	for item := range char.Items {
-		//fmt.Fprintf(&strBuilder, generateItemCard(char.Items[item]))
 		list = append(list, generateItemCard(char.Items[item])...)
 	}
-	return list //strBuilder.String()
+	return list
 }
 
 func generateItemCard(item Item) []byte {
@@ -161,55 +154,64 @@ func generateItemCard(item Item) []byte {
 	newPage = bytes.Replace(newPage, []byte("##NAME##"), []byte(item.GetName()), 1)
 	newPage = bytes.Replace(newPage, []byte("##TYPE##"), []byte(item.GetType()), 1)
 	newPage = bytes.Replace(newPage, []byte("##DESCRIPTION##"), []byte(item.GetDescription()), 1)
-	return newPage //strBuilder.String()
+	return newPage
 }
 
-/*
-<div class="col-sm-6 col-md-4 col-lg-3 col-12">
-	<a href="/rules/handbook/classes/Berserker" class="v-card v-card--hover v-card--link v-sheet theme--light" tabindex="0" style="height: 100%;">
-		<div primary-title="" class="v-card__text">
-			<h3>Berserker</h3>
-				<div class="text-left">
-					<p>Melee combatant who utilizes rage to increase prowess</p>
-					<p class="ma-0">
-					<strong>Hit Die:</strong> 1d12</p>
-					<p class="ma-0"><strong>Primary Ability:</strong> Strength</p>
-					<p class="ma-0"><strong>Saves:</strong> Strength and Constitution</p>
-				</div>
-			</div>
-		</a>
-	</div>
-*/
 func CharacterEditPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "CHARACTER EDIT")
 }
 
 func PlayerSocket(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "PLAYER SOCKET")
+	var upgrader = websocket.Upgrader{ //TODO: Put this somewhere better
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
+
+	log.Println("Socket Connecting!")
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+	}
+	charName := strings.Split(r.URL.Path, "/")[2]
+	log.Println("Socket Connected! ", charName)
+	PlayerSocketHandler(charName, ws)
 }
 
-func PageProcessor(page []byte, tag []byte, format string) {
+//messageType is an int and can be 1:Text([]uint8|[]byte), 2:binary(), 8:closemessage, 9:ping message, 10:pong message?
+func PlayerSocketHandler(charName string, conn *websocket.Conn) {
+	//char := characters[charName]
+	messages := make(chan []byte, 10) //TODO:limit
 
+	/*if err := conn.WriteMessage(1, []byte("Hello, Moose!")); err != nil {
+		log.Println(err)
+		return
+	}
+	messageType, p, err := conn.ReadMessage()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	fmt.Println(messageType, string(p))*/
 }
 
-/*
-var router RequestRouter
+func PlayerSocketListener(conn *websocket.Conn) {
+	for {
 
-type RequestRouter struct {
-	routes []*Route
-}
-
-func (r *Router) Route(uri string//w and r//) {
-	for i,_:=range r.routes{
-		if {//if regex match
-			r.routes[i]//call that function with w and r
+		_, message, err := conn.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("error: %v", err)
+			}
+			break
 		}
+		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		c.hub.broadcast <- message
+
 	}
 }
 
-type Route struct {
-	Pattern regexp.Regexp
-	Func    func(http.ResponseWriter, *http.Request)
-}
+func PlayerSocketWriter(conn *websocket.Conn) {
 
-*/
+}

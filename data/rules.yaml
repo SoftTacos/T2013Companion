@@ -7,8 +7,8 @@ statnames:
  - PER
  - RES
  - EDU
- - CUF #DONT USE
- - OODA #DONT USE
+# - CUF #DONT USE
+# - OODA #DONT USE
 skillnames:
  - AGR #Agriculture
  - ANI #AnimalHusbandry

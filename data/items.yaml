@@ -37,6 +37,11 @@ consumables:
     amount: 200 #ml
     description: "lol only 9mm"
 
+clothing:
+  Gorka:
+    weight: 1
+    warmth: 10
+    description: "Light outer jacket imbued with slavic magic"
 misc:
   Pillow:
     weight: 10

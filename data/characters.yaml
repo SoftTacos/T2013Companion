@@ -43,12 +43,14 @@ skills:
 
 #!items
 items:
-  - AKM
-  - Vodka
-  - Pillow
-  - 7.62x39
-  - 9mm
-  - Vodka
+ - AKM
+ - Vodka
+ - Pillow
+ - 7.62x39
+ - 9mm
+ - Vodka
+ - Dog Food
+# - Gorka
 currentweapon: AKM
 
 ---
@@ -96,8 +98,8 @@ skills:
 
 #!items
 items:
-  - AKM
-  - Vodka
+ - AKM
+ - Vodka
 currentweapon: AKM
 
 ---
@@ -145,6 +147,6 @@ skills:
 
 #!items
 items:
-  - AK74
-  - Vodka
+ - AK74
+ - Vodka
 currentweapon: AK74

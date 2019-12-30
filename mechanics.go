@@ -6,6 +6,10 @@ import (
 	"sort"
 )
 
+func SkillCheck(skillname string) int {
+	return 0
+}
+
 func advantage(rolls []uint8) uint8 {
 	lowest := rolls[0]
 	for i, _ := range rolls {

@@ -4,21 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  <!--<link rel="stylesheet" Content-Type="text/css" href="bootstrap.css">-->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 </head>
 
 <body class="bg-light">
-  <div class="container-fluid text-center p-3 my-3 border">
-    <div class="row" id="name">
-      <h3>##NAME##</h3>
-    </div>
-  </div>
-
   <div class="container-fluid">
     <div class="row">
-      <div class="col-8 col-sm-8 col-md-5 col-lg-4 container-fluid" id="statsAndSkills">
+      <div class="col-8 col-sm-8 col-md-5 col-lg-4 border" id="character">
+        <div class="row">
+          <h3 id="name">##NAME##</h3>
+        </div>
         <div class="row my-3 border">
           <div class="col-4 col-sm-4 col-md-4 col-lg-4">
             <table class="table-striped table-hover p-0" id="stats">
@@ -26,14 +24,16 @@
             </table>
           </div>
           <div class="col-8 col-sm-8 col-md-8 col-lg-8">
-            <div class="row p-0">
-              <!--<table class="list-group pt-0" id="skills"></table>-->
+            <div class="row p-0" id="skills">
               ##SKILLS##
             </div>
           </div>
         </div>
       </div>
-      <div class="col container-fluid">
+
+      ##STATUSCHART##
+
+      <div class="col border">
         <div class="row">
           <h3>Items</h3>
         </div>
@@ -50,6 +50,7 @@
       <div class="col-12 bg-dark" id="canvasWrapper">
         <canvas id="canvas" width="800" height="600"></canvas>
       </div>
+
     </div>
   </div>
 </body>
@@ -57,13 +58,35 @@
 </html>
 
 <script>
-  //let socket = new WebSocket("ws://localhost:8082/visualizerSocket");
+  var charName = document.getElementById("name").innerHTML
+  let socket = new WebSocket("ws://localhost:8082/player/"+charName+"/socket");
 
-</script>
-<style>
-  #stats-container {
-    min-width: 800px;
-    width: auto !important;
-    width: 300px;
+  var canvas = document.getElementById("canvas");
+  var cc = canvas.getContext("2d");
+
+  var toType = function (obj) {//from: http://javascriptweblog.wordpress.com/2011/08/08/fixing-the-javascript-typeof-operator/
+    return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
   }
-</style>
+
+  socket.onopen = function (event) {
+    console.log("Connected");
+    socket.send("ANUUUUU")
+  };
+
+  //https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent
+  socket.onmessage = function (event) {
+    console.log(event.data)
+  };
+
+  socket.onclose = function (event) {
+    if (event.wasClean) {
+      console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+    } else {
+      console.log('[close] Connection died');
+    }
+  };
+
+  socket.onerror = function (error) {
+    console.log(`[error] ${error.message}`);
+  };
+</script>

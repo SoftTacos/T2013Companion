@@ -6,7 +6,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -91,6 +90,17 @@ func refresh() {
 		pages["CharacterPage"] = LoadTextFile("pages\\Character.html")
 		pages["ItemCard"] = LoadTextFile("pages\\ItemCard.html")
 		pages["SkillChartElement"] = LoadTextFile("pages\\SkillChartElement.html")
+		pages["StatusChart"] = LoadTextFile("pages\\StatusChart.html")
+
+	}
+}
+
+func debug() {
+	reader := bufio.NewReader(os.Stdin)
+	whitespaceRegex := regexp.MustCompile(`\s`)
+	for {
+		input, _ := reader.ReadString('\n')
+		input = whitespaceRegex.ReplaceAllString(input, "")
 
 	}
 }
@@ -101,8 +111,8 @@ func main() {
 	ReadCharacterData(LoadTextFile("data\\characters.yaml"))
 	go refresh() //im lazy
 	go http.ListenAndServe(":8082", nil)
-	fmt.Println("COMBAT")
-	initiatives := GenerateInitiatives(characters)
-	Combat(initiatives)
-
+	//fmt.Println("COMBAT")
+	//initiatives := GenerateInitiatives(characters)
+	//Combat(initiatives)
+	debug()
 }
