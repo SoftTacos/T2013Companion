@@ -1,0 +1,43 @@
+#256
+rangedWeapons:
+  AKM:
+    speed: 3
+    damage: 3
+    bulk: 3
+    weight: 7.5
+    description: "AK pattern rifle chambered in 7.62x39"
+  AK74:
+    speed: 3
+    damage: 3
+    bulk: 3
+    weight: 7.0
+    description: "AK pattern rifle chambered in 5.45x39"
+    
+meleeWeapons:
+  baseballBat:
+    speed: 5
+    damage: 1
+    weight: 5.0
+    description: "yeet"
+
+consumables:
+  Vodka:
+    amount: 200 #ml
+    description: "top tier fermented potato"
+  Dog Food:
+    amount: 200 #ml
+    description: "woof"
+  7.62x39:
+    amount: 200 #ml
+    description: "low speed high drag"
+  5.45x39:
+    amount: 200 #ml
+    description: "high speed low drag"
+  9mm:
+    amount: 200 #ml
+    description: "lol only 9mm"
+
+misc:
+  Pillow:
+    weight: 10
+    description: "soft!"

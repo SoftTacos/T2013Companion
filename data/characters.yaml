@@ -1,0 +1,150 @@
+#!character
+name: "Moose"
+stats:
+  AWA:  15
+  CDN:  8
+  FIT:  10
+  MUS:  10
+  COG:  10
+  PER:  15
+  RES:  10
+  EDU:  2
+  CUF:  10 #DONT USE
+  OODA: 10 #DONT USE
+skills:
+  AGR: 5
+  ANI: 5
+  AQU: 5
+  ARC: 5
+  ART: 5
+  AVI: 5
+  CLI: 5
+  CMD: 5
+  COM: 5
+  CON: 5
+  DEC: 5
+  DRI: 5
+  ELE: 5
+  FIE: 5
+  UNA: 5
+  HAW: 5
+  INS: 5
+  INT: 5
+  RIF: 5
+  MEC: 5
+  MED: 5
+  RID: 5
+  PRF: 5
+  PRS: 5
+  SEC: 5
+  PIS: 5
+  STR: 5
+
+
+#!items
+items:
+  - AKM
+  - Vodka
+  - Pillow
+  - 7.62x39
+  - 9mm
+  - Vodka
+currentweapon: AKM
+
+---
+#!character
+name: Luna
+stats:
+  AWA:  10
+  CDN:  10
+  FIT:  10
+  MUS:  20
+  COG:  10
+  PER:  20
+  RES:  10
+  EDU:  3
+  CUF:  10 #DONT USE
+  OODA: 10 #DONT USE
+skills:
+  AGR: 5
+  ANI: 5
+  AQU: 5
+  ARC: 5
+  ART: 5
+  AVI: 5
+  CLI: 5
+  CMD: 5
+  COM: 5
+  CON: 5
+  DEC: 5
+  DRI: 5
+  ELE: 5
+  FIE: 5
+  UNA: 5
+  HAW: 5
+  INS: 5
+  INT: 5
+  RIF: 5
+  MEC: 5
+  MED: 5
+  RID: 5
+  PRF: 5
+  PRS: 5
+  SEC: 5
+  PIS: 5
+  STR: 5
+
+#!items
+items:
+  - AKM
+  - Vodka
+currentweapon: AKM
+
+---
+#!character
+name: Max
+stats:
+  AWA:  10
+  CDN:  10
+  FIT:  10
+  MUS:  20
+  COG:  10
+  PER:  20
+  RES:  10
+  EDU:  3
+  CUF:  10 #DONT USE
+  OODA: 10 #DONT USE
+skills:
+  AGR: 5
+  ANI: 5
+  AQU: 5
+  ARC: 5
+  ART: 5
+  AVI: 5
+  CLI: 5
+  CMD: 5
+  COM: 5
+  CON: 5
+  DEC: 5
+  DRI: 5
+  ELE: 5
+  FIE: 5
+  UNA: 5
+  HAW: 5
+  INS: 5
+  INT: 5
+  RIF: 5
+  MEC: 5
+  MED: 5
+  RID: 5
+  PRF: 5
+  PRS: 5
+  SEC: 5
+  PIS: 5
+  STR: 5
+
+#!items
+items:
+  - AK74
+  - Vodka
+currentweapon: AK74

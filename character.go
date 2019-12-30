@@ -3,6 +3,7 @@ package main
 type Character struct {
 	Name          string
 	Stats         map[string]uint8 //name->level
+	Skills        map[string]uint8 //name->level
 	Items         map[string]Item
 	CurrentWeapon *RangedWeaponItem //placeholder, will be removed and replaced with an item specific call
 }

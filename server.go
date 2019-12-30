@@ -21,6 +21,9 @@ func SetupServer() {
 	pages = make(map[string][]byte)
 	pages["CharacterSelectPage"] = LoadTextFile("pages\\CharSelect.html")
 	pages["CharacterPage"] = LoadTextFile("pages\\Character.html")
+	pages["ItemCard"] = LoadTextFile("pages\\ItemCard.html")
+	pages["SkillChartElement"] = LoadTextFile("pages\\SkillChartElement.html")
+
 	router = mux.NewRouter()
 	SetRoutes()
 	fmt.Println("STARTED; IP:", GetOutboundIP())
@@ -84,29 +87,99 @@ func DMSocket(w http.ResponseWriter, r *http.Request) {
 
 //this is super gross and janky, will be refactoring all the page preprocessing once scope is known
 func CharacterPage(w http.ResponseWriter, r *http.Request) {
-	page := pages["CharacterPage"]
 	charName := strings.Split(html.EscapeString(r.URL.Path), "/")[2]
+	if _, ok := characters[charName]; !ok {
+		fmt.Println("Error: Character not found:", charName)
+		fmt.Fprintf(w, "404 Character Not Found!")
+		return
+	}
+
 	fmt.Println("Character Page: ", charName)
-	//TODO: Validate if character even exists
+	page := pages["CharacterPage"]
 	charData := characters[charName]
 	page = bytes.Replace(page, []byte("##NAME##"), []byte(charData.Name), 1)
-	var strBuilder strings.Builder
-
-	for i, _ := range rules.StatNames { //key, val := range charData.Stats
-		stat := strconv.FormatUint(uint64(charData.Stats[rules.StatNames[i]]), 8)
-		fmt.Fprintf(&strBuilder, `<tr class="text-center"><td class="container-fluid">`+rules.StatNames[i]+`</td><td class="container-fluid">`+stat+`</td></tr>`)
-	}
-	page = bytes.Replace(page, []byte("##STATS##"), []byte(strBuilder.String()), 1)
-	page = bytes.Replace(page, []byte("##CURRENT_WEAPON##"), []byte(generateItemCard(charData.CurrentWeapon)), 1)
+	page = bytes.Replace(page, []byte("##STATS##"), generateStatChart(charData), 1)
+	page = bytes.Replace(page, []byte("##SKILLS##"), generateSkillChart(charData), 1)
+	page = bytes.Replace(page, []byte("##CURRENT_WEAPON##"), generateCurrentWeaponCard(charData.CurrentWeapon), 1)
+	page = bytes.Replace(page, []byte("##ITEMS##"), generateHtmlItemList(charData), 1)
 
 	fmt.Fprintf(w, string(page))
 }
 
-func generateItemCard(item Item) string {
-
-	return ""
+func generateStatChart(char *Character) []byte {
+	chart := make([]byte, 450)
+	for _, statName := range rules.StatNames { //key, val := range charData.Stats
+		stat := strconv.FormatUint(uint64(char.Stats[statName]), 8)
+		chart = append(chart, []byte(`<tr class="text-left"><td>`+statName+`</td><td>`+stat+`</td></tr>`)...)
+	}
+	return chart
 }
 
+func generateSkillChart(char *Character) []byte {
+	/*chart := make([]byte, 450)
+	for _, skillName := range rules.SkillNames {
+		skill := strconv.FormatUint(uint64(char.Skills[skillName]), 8)
+		chart = append(chart, []byte(`<div class="col-4 border pt-0">`+skillName+` `+skill+`</div>`)...) //TODO: make them format like a table
+	}
+	return chart
+	*/
+	chart := make([]byte, len(pages["SkillChartElement"])*30)
+	for _, skillName := range rules.SkillNames {
+		element := pages["SkillChartElement"]
+		element = bytes.Replace(element, []byte("##SKILLNAME##"), []byte(skillName), 1)
+		skill := strconv.FormatUint(uint64(char.Skills[skillName]), 8)
+		element = bytes.Replace(element, []byte("##SKILL##"), []byte(skill), 1)
+		chart = append(chart, element...)
+	}
+	return chart
+}
+
+//TODO USE THE CARD CLASS REEE
+func generateCurrentWeaponCard(item Item) []byte {
+	newPage := make([]byte, len(pages["ItemCard"]))
+	copy(newPage, pages["ItemCard"])
+	newPage = bytes.Replace(newPage, []byte("##CLASS##"), []byte("col border"), 1)
+	newPage = bytes.Replace(newPage, []byte("##NAME##"), []byte(item.GetName()), 1)
+	newPage = bytes.Replace(newPage, []byte("##TYPE##"), []byte(item.GetType()), 1)
+	newPage = bytes.Replace(newPage, []byte("##DESCRIPTION##"), []byte(item.GetDescription()), 1)
+	return newPage //strBuilder.String()
+}
+
+func generateHtmlItemList(char *Character) []byte {
+	list := make([]byte, 1000) //TODO
+	for item := range char.Items {
+		//fmt.Fprintf(&strBuilder, generateItemCard(char.Items[item]))
+		list = append(list, generateItemCard(char.Items[item])...)
+	}
+	return list //strBuilder.String()
+}
+
+func generateItemCard(item Item) []byte {
+	newPage := make([]byte, len(pages["ItemCard"]))
+	copy(newPage, pages["ItemCard"])
+	newPage = bytes.Replace(newPage, []byte("##CLASS##"), []byte("col-6 col-sm-6 col-md-5 col-lg-4 border"), 1)
+	newPage = bytes.Replace(newPage, []byte("##NAME##"), []byte(item.GetName()), 1)
+	newPage = bytes.Replace(newPage, []byte("##TYPE##"), []byte(item.GetType()), 1)
+	newPage = bytes.Replace(newPage, []byte("##DESCRIPTION##"), []byte(item.GetDescription()), 1)
+	return newPage //strBuilder.String()
+}
+
+/*
+<div class="col-sm-6 col-md-4 col-lg-3 col-12">
+	<a href="/rules/handbook/classes/Berserker" class="v-card v-card--hover v-card--link v-sheet theme--light" tabindex="0" style="height: 100%;">
+		<div primary-title="" class="v-card__text">
+			<h3>Berserker</h3>
+				<div class="text-left">
+					<p>Melee combatant who utilizes rage to increase prowess</p>
+					<p class="ma-0">
+					<strong>Hit Die:</strong> 1d12</p>
+					<p class="ma-0"><strong>Primary Ability:</strong> Strength</p>
+					<p class="ma-0"><strong>Saves:</strong> Strength and Constitution</p>
+				</div>
+			</div>
+		</a>
+	</div>
+*/
 func CharacterEditPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "CHARACTER EDIT")
 }

@@ -9,39 +9,46 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 </head>
 
-<body>
+<body class="bg-light">
   <div class="container-fluid text-center p-3 my-3 border">
     <div class="row" id="name">
       <h3>##NAME##</h3>
     </div>
   </div>
 
-  <div class="container">
-    <div class="row p-3 my-3 border">
-      <div class="col-4 col-sm-4 col-md-3 col-lg-2 col-xl-2">
-        <table class="table-striped ">
-
-          ##STATS##
-        </table>
-      </div>
-
-      <div class="col" id="equipped">
-        <div class="container-fluid">
-          <div class="table-responsive">
-            <table class="table table-bordered table-hover table-responsive">
-              <tr>
-                <th class="text-center">PLACEHOLDER</th>
-                <th class="text-center">PLACEHOLDER</th>
-              </tr>
-              ##CURRENT_WEAPON##
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-8 col-sm-8 col-md-5 col-lg-4 container-fluid" id="statsAndSkills">
+        <div class="row my-3 border">
+          <div class="col-4 col-sm-4 col-md-4 col-lg-4">
+            <table class="table-striped table-hover p-0" id="stats">
+              ##STATS##
             </table>
           </div>
+          <div class="col-8 col-sm-8 col-md-8 col-lg-8">
+            <div class="row p-0">
+              <!--<table class="list-group pt-0" id="skills"></table>-->
+              ##SKILLS##
+            </div>
+          </div>
         </div>
-
+      </div>
+      <div class="col container-fluid">
+        <div class="row">
+          <h3>Items</h3>
+        </div>
+        <div class="col-8 col-sm-8 col-md-8 col-lg-8" id="equipped">
+          ##CURRENT_WEAPON##
+        </div>
         <div class="container-fluid">
-          ##ITEMS##
-          v-card v-card--hover v-card--link v-sheet theme--light
+          <div class="row" id="items">
+            ##ITEMS##
+          </div>
         </div>
+      </div>
+
+      <div class="col-12 bg-dark" id="canvasWrapper">
+        <canvas id="canvas" width="800" height="600"></canvas>
       </div>
     </div>
   </div>
@@ -54,28 +61,9 @@
 
 </script>
 <style>
-  /* Increase all font sizes on mobile */
-  @media (max-width: 767px) {
-    body {
-      /* default is 1rem or 16px */
-      font-size: 25px;
-    }
-
-  }
-
-  @media (max-width: 767px) {
-    body {
-      /* default is 1rem or 16px */
-      font-size: 25px;
-    }
-
-  }
-
   #stats-container {
     min-width: 800px;
     width: auto !important;
     width: 300px;
   }
-
-  .text-center {}
 </style>

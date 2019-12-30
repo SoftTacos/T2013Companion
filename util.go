@@ -63,6 +63,13 @@ func ReadCharacterData(data []byte) {
 
 }
 
+func ReadRuleData(data []byte) {
+	err := yaml.Unmarshal(data, &rules)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+}
+
 func ReadItemData(data []byte) {
 	itemData := make(map[string]map[string]map[string]string) //type->names->data
 	err := yaml.Unmarshal(data, &itemData)
@@ -86,13 +93,15 @@ func SetupRangedWeapons(weaponData map[string]map[string]string) {
 		pDamage, _ := strconv.ParseUint(currentWeaponData["damage"], 10, 64)
 		pBulk, _ := strconv.ParseUint(currentWeaponData["bulk"], 10, 64)
 		pWeight, _ := strconv.ParseFloat(currentWeaponData["weight"], 32)
+		pDesc, _ := currentWeaponData["description"]
 
 		wep := RangedWeaponItem{
-			Name:   wepName,
-			Speed:  uint8(pSpeed),
-			Damage: uint8(pDamage),
-			Bulk:   uint8(pBulk),
-			weight: float32(pWeight),
+			Name:        wepName,
+			Speed:       uint8(pSpeed),
+			Damage:      uint8(pDamage),
+			Bulk:        uint8(pBulk),
+			weight:      float32(pWeight),
+			description: pDesc,
 		}
 		itemData[wepName] = &wep
 	}
@@ -104,12 +113,14 @@ func SetupMeleeWeapons(weaponData map[string]map[string]string) {
 		pSpeed, _ := strconv.ParseUint(currentWeaponData["speed"], 10, 64)
 		pDamage, _ := strconv.ParseUint(currentWeaponData["damage"], 10, 64)
 		pWeight, _ := strconv.ParseFloat(currentWeaponData["weight"], 32)
+		pDesc, _ := currentWeaponData["description"]
 
 		wep := MeleeWeaponItem{
-			Name:   wepName,
-			Speed:  uint8(pSpeed),
-			Damage: uint8(pDamage),
-			weight: float32(pWeight),
+			Name:        wepName,
+			Speed:       uint8(pSpeed),
+			Damage:      uint8(pDamage),
+			weight:      float32(pWeight),
+			description: pDesc,
 		}
 		itemData[wepName] = &wep
 	}
@@ -118,13 +129,15 @@ func SetupMeleeWeapons(weaponData map[string]map[string]string) {
 func SetupConsumables(data map[string]map[string]string) {
 	for name := range data {
 		currentItemData := data[name]
-		pWeight, _ := strconv.ParseFloat(currentItemData["weight"], 32)
 		pAmount, _ := strconv.ParseFloat(currentItemData["amount"], 32)
+		pWeight, _ := strconv.ParseFloat(currentItemData["weight"], 32)
+		pDesc, _ := currentItemData["description"]
 
 		item := ConsumableItem{
-			Name:   name,
-			Amount: float32(pAmount),
-			weight: float32(pWeight),
+			Name:        name,
+			Amount:      float32(pAmount),
+			weight:      float32(pWeight),
+			description: pDesc,
 		}
 		itemData[name] = &item
 	}
@@ -134,9 +147,12 @@ func SetupMisc(data map[string]map[string]string) {
 	for name := range data {
 		currentItemData := data[name]
 		pWeight, _ := strconv.ParseFloat(currentItemData["weight"], 32)
+		pDesc, _ := currentItemData["description"]
+
 		item := MiscItem{
-			Name:   name,
-			weight: float32(pWeight),
+			Name:        name,
+			weight:      float32(pWeight),
+			description: pDesc,
 		}
 		itemData[name] = &item
 	}
