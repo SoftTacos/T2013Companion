@@ -20,6 +20,10 @@ var rules Rules
 var globals Globals
 var itemData map[string]Item //this holds the item "definitions", same struct as the items players have, TODO: Make player's weapons "instances" so they can eventually have stats like "status"
 var characters map[string]*Character
+var gameServers []GameServer
+
+var newline = []byte{'\n'}
+var space = []byte{' '}
 
 type Rules struct {
 	EncMap        map[string]uint8 //encumbrance map of name to initiative value

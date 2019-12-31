@@ -29,6 +29,10 @@ func SetupServer() {
 	router = mux.NewRouter()
 	SetRoutes()
 	fmt.Println("STARTED; IP:", GetOutboundIP())
+
+	gameServers = []GameServer{
+		GameServer{Players: []*PlayerClient{}},
+	}
 }
 
 func GetOutboundIP() net.IP {
@@ -162,6 +166,11 @@ func CharacterEditPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func PlayerSocket(w http.ResponseWriter, r *http.Request) {
+	charName := strings.Split(r.URL.Path, "/")[2]
+	if _, ok := characters[charName]; !ok {
+		fmt.Println(charName, "Does not exist!")
+		return
+	}
 	var upgrader = websocket.Upgrader{ //TODO: Put this somewhere better
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -174,44 +183,14 @@ func PlayerSocket(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-	charName := strings.Split(r.URL.Path, "/")[2]
 	log.Println("Socket Connected! ", charName)
-	PlayerSocketHandler(charName, ws)
-}
 
-//messageType is an int and can be 1:Text([]uint8|[]byte), 2:binary(), 8:closemessage, 9:ping message, 10:pong message?
-func PlayerSocketHandler(charName string, conn *websocket.Conn) {
-	//char := characters[charName]
-	messages := make(chan []byte, 10) //TODO:limit
-
-	/*if err := conn.WriteMessage(1, []byte("Hello, Moose!")); err != nil {
-		log.Println(err)
-		return
+	client := &PlayerClient{
+		conn:      ws,
+		char:      characters[charName],
+		requests:  make(chan []byte, 10),
+		responses: make(chan []byte, 10),
 	}
-	messageType, p, err := conn.ReadMessage()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	fmt.Println(messageType, string(p))*/
-}
-
-func PlayerSocketListener(conn *websocket.Conn) {
-	for {
-
-		_, message, err := conn.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
-			}
-			break
-		}
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
-
-	}
-}
-
-func PlayerSocketWriter(conn *websocket.Conn) {
-
+	gameServers[0].AddPlayerClient(client) //TODO: Scale this shit up yo
+	client.Start()
 }
