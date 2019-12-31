@@ -46,7 +46,18 @@
           </div>
         </div>
       </div>
-
+      <!--
+      <div class="col">
+        <div class="form-group">
+          <label for="usr">Name:</label>
+          <input type="text" class="form-control" id="msgType">
+        </div>
+        <div class="form-group">
+          <label for="usr">Name:</label>
+          <input type="text" class="form-control" id="usr">
+        </div>
+      </div>
+    -->
       <div class="col-12 bg-dark" id="canvasWrapper">
         <canvas id="canvas" width="800" height="600"></canvas>
       </div>
@@ -59,7 +70,8 @@
 
 <script>
   var charName = document.getElementById("name").innerHTML
-  let socket = new WebSocket("ws://192.168.0.12:8082/player/"+charName+"/socket");
+  let socket = new WebSocket("ws://192.168.0.12:8082/player/" + charName + "/socket");
+  socket.binaryType = 'arraybuffer';
 
   var canvas = document.getElementById("canvas");
   var cc = canvas.getContext("2d");
@@ -68,14 +80,30 @@
     return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
   }
 
-  socket.onopen = function (event) {
-    console.log("Connected");
-    socket.send("ANUUUUU")
-  };
+  function encodeRequest(requestType, message) {//uint16, string
+    //encReq
+
+    return encReq
+  }
+
+  function decodeResponse(event) {
+    let data=new Uint8Array(event.data)
+    console.log(data)
+    type = data[1]*256+data[0]//Uint16Array.from([ary[0],ary[1]])
+    console.log(type)
+    message = new TextDecoder("utf-8").decode(data.slice(2))
+    return {"type":type,"message":message}
+  }
 
   //https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent
   socket.onmessage = function (event) {
-    console.log(event.data)
+    response = decodeResponse(event)
+    console.log(response)
+  };
+
+  socket.onopen = function (event) {
+    console.log("Connected");
+    socket.send("BLYAT");//encodeRequest(0,"ANUUUUU"))
   };
 
   socket.onclose = function (event) {

@@ -39,7 +39,8 @@ func (gs *GameServer) Handle() {
 	for {
 		select {
 		case req := <-gs.Requests:
-			if err := req.Client.conn.WriteMessage(1, []byte("[response!]")); err != nil {
+			response := EncodeResponse(uint16(65020), []byte("[response!]"), websocket.TextMessage)
+			if err := req.Client.conn.WriteMessage(2, response); err != nil {
 				fmt.Println(err)
 				continue
 			}
@@ -70,7 +71,7 @@ func (pc *Client) listener() {
 			break
 		}
 
-		requestType, data := ParseRequest(messageType, rawMessage) //websocket.BinaryMessage, websocket.TextMessage
+		requestType, data := DecodeRequest(messageType, rawMessage) //websocket.BinaryMessage, websocket.TextMessage
 		pc.requests <- &GameRequest{
 			MessageType: messageType,
 			RequestType: requestType,
@@ -86,7 +87,7 @@ func (pc *Client) listener() {
 	}
 }
 
-func ParseRequest(msgType int, rawMsg []byte) (uint16, []byte) {
+func DecodeRequest(msgType int, rawMsg []byte) (uint16, []byte) {
 	fmt.Println(msgType, string(rawMsg))
 	if len(rawMsg) < 3 {
 		fmt.Println("Message too small, skipping")
@@ -98,6 +99,14 @@ func ParseRequest(msgType int, rawMsg []byte) (uint16, []byte) {
 	fmt.Println("TYPE: ", requestType)
 
 	return requestType, rawMsg[2:]
+}
+
+func EncodeResponse(responseType uint16, message []byte, messageType int) []byte {
+	response := make([]byte, len(message)+2)
+	binary.LittleEndian.PutUint16(response[0:], responseType)
+	copy(response[2:], message)
+	fmt.Println(string(response), response)
+	return response //[]byte("ENCODED RESPONSE")
 }
 
 /*
