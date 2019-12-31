@@ -11,46 +11,9 @@
 </head>
 
 <body class="bg-light">
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-12 col-sm-12 col-md-5 col-lg-4 border" id="character">
-        <div class="row">
-          <h3 id="name">##NAME##</h3>
-        </div>
-        <div class="row my-3 border">
-          <div class="col-4 col-sm-4 col-md-4 col-lg-4">
-            <table class="table-striped table-hover p-0" id="stats">
-              ##STATS##
-            </table>
-          </div>
-          <div class="col-8 col-sm-8 col-md-8 col-lg-8">
-            <div class="row p-0" id="skills">
-              ##SKILLS##
-            </div>
-          </div>
-        </div>
-      </div>
-
-      ##STATUSCHART##
-
-      <div class="col border">
-        <div class="row">
-          <h3>Items</h3>
-        </div>
-        <div class="col-8 col-sm-8 col-md-8 col-lg-8" id="equipped">
-          ##CURRENT_WEAPON##
-        </div>
-        <div class="container-fluid">
-          <div class="row" id="items">
-            ##ITEMS##
-          </div>
-        </div>
-      </div>
-
-      <div class="col-12 bg-dark" id="canvasWrapper">
-        <canvas id="canvas" width="800" height="600"></canvas>
-      </div>
-
+  <div class="row">
+    <div class="col-8 col-sm-8 col-md-5 col-lg-4 border" id="characters">
+      ##CHARACTERS##
     </div>
   </div>
 </body>
@@ -58,11 +21,7 @@
 </html>
 
 <script>
-  var charName = document.getElementById("name").innerHTML
-  let socket = new WebSocket("ws://192.168.0.12:8082/player/"+charName+"/socket");
-
-  var canvas = document.getElementById("canvas");
-  var cc = canvas.getContext("2d");
+  let socket = new WebSocket("ws://192.168.0.12:8082/dm/socket");
 
   var toType = function (obj) {//from: http://javascriptweblog.wordpress.com/2011/08/08/fixing-the-javascript-typeof-operator/
     return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
@@ -70,7 +29,7 @@
 
   socket.onopen = function (event) {
     console.log("Connected");
-    socket.send("ANUUUUU")
+    socket.send("CHEEKI BREEKI")
   };
 
   //https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent

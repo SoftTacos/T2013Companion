@@ -12,7 +12,7 @@ import (
 func ReadCharacterData(data []byte) {
 	delimeter := []byte("---")
 	dataSlices := bytes.Split(data, delimeter)
-	characters = make(map[string]*Character) //make([]*Character, len(dataSlices))
+	playerCharacters = make(map[string]*Character) //make([]*Character, len(dataSlices))
 	itemsTag := "#!items"
 	//characterTag := "#!character"
 
@@ -25,7 +25,7 @@ func ReadCharacterData(data []byte) {
 			log.Fatalf("error: %v", err)
 		}
 		//TODO: Validate character data
-		characters[char.Name] = &char
+		playerCharacters[char.Name] = &char
 		//ITEMS
 		itemsSubset := struct {
 			Items         []string

@@ -1,68 +1,42 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"log"
 
 	"github.com/gorilla/websocket"
 )
 
-type GameServer struct {
-	Players []*PlayerClient
-	DM      DMClient
+type GameRequest struct {
+	Message []byte
+	Client  *Client
 }
 
-func (gs *GameServer) AddPlayerClient(client *PlayerClient) {
-	gs.Players = append(gs.Players, client)
+type GameServer struct {
+	Players  []*Client
+	DM       *Client
+	Requests chan *GameRequest
+}
+
+func (gs *GameServer) AddClient(char *Character, ws *websocket.Conn) {
+	newClient := &Client{
+		conn:      ws,
+		character: char,
+		requests:  gs.Requests,
+		//responses: make(chan []byte, 1),
+	}
+	if char == nil {
+		gs.DM = newClient
+	} else {
+		gs.Players = append(gs.Players, newClient)
+	}
+	newClient.Start()
 }
 
 func (gs *GameServer) Handle() {
-	//for{
-	//handle all input events from DMs + Players
-}
-
-type Client interface {
-	Start()
-	Listener()
-	Writer()
-}
-
-type PlayerClient struct {
-	conn      *websocket.Conn
-	char      *Character
-	requests  chan []byte
-	responses chan []byte
-}
-
-func (pc *PlayerClient) Start() {
-	go pc.Listener()
-	go pc.Writer()
-}
-
-func (pc *PlayerClient) Listener() {
-	for {
-		_, message, err := pc.conn.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
-			}
-			break
-		}
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		fmt.Println("RECEIVED:", string(message))
-		//pc.requests <- message
-		pc.responses <- message
-	}
-	fmt.Println("Closing Socket for Player: ", pc.char.Name)
-}
-
-func (pc *PlayerClient) Writer() {
 	for {
 		select {
-		case response := <-pc.responses:
-			fmt.Println("SENDING: ", string(response))
-			if err := pc.conn.WriteMessage(1, response); err != nil {
+		case req := <-gs.Requests:
+			if err := req.Client.conn.WriteMessage(1, []byte("[response!]")); err != nil {
 				fmt.Println(err)
 				continue
 			}
@@ -70,39 +44,44 @@ func (pc *PlayerClient) Writer() {
 	}
 }
 
-type DMClient struct {
+type Client struct {
+	conn      *websocket.Conn
+	character *Character
+	requests  chan *GameRequest
+	responses chan []byte
 }
 
-/*
-//messageType is an int and can be 1:Text([]uint8|[]byte), 2:binary(), 8:closemessage, 9:ping message, 10:pong message?
-func PlayerSocketListener(charName string, conn *websocket.Conn) {
+func (pc *Client) Start() {
+	go pc.listener()
+	//go pc.writer()
+}
+
+func (pc *Client) listener() {
 	for {
-		_, message, err := conn.ReadMessage()
+		_, message, err := pc.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
+				fmt.Printf("error: %v", err)
 			}
 			break
 		}
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
-
+		//message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		pc.requests <- &GameRequest{
+			Message: message,
+			Client:  pc,
+		}
 	}
 }
-*/
 
-/*func PlayerSocketHandler(charName string, conn *websocket.Conn) {
-//char := characters[charName]
-//	messages := make(chan []byte, 10) //TODO:limit
-
-/*if err := conn.WriteMessage(1, []byte("Hello, Moose!")); err != nil {
-	log.Println(err)
-	return
+//this might not be needed after all
+func (pc *Client) writer() {
+	for {
+		select {
+		case response := <-pc.responses:
+			if err := pc.conn.WriteMessage(1, response); err != nil {
+				fmt.Println(err)
+				continue
+			}
+		}
+	}
 }
-messageType, p, err := conn.ReadMessage()
-if err != nil {
-	log.Println(err)
-	return
-}
-fmt.Println(messageType, string(p))*/
-//}

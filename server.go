@@ -22,17 +22,23 @@ func SetupServer() {
 	pages = make(map[string][]byte)
 	pages["CharacterSelectPage"] = LoadTextFile("pages\\CharSelect.html")
 	pages["CharacterPage"] = LoadTextFile("pages\\Character.html")
+	pages["DMPage"] = LoadTextFile("pages\\DM.html")
 	pages["ItemCard"] = LoadTextFile("pages\\ItemCard.html")
 	pages["SkillChartElement"] = LoadTextFile("pages\\SkillChartElement.html")
 	pages["StatusChart"] = LoadTextFile("pages\\StatusChart.html")
+	pages["CharacterCard"] = LoadTextFile("pages\\CharacterCard.html")
 
 	router = mux.NewRouter()
 	SetRoutes()
 	fmt.Println("STARTED; IP:", GetOutboundIP())
 
 	gameServers = []GameServer{
-		GameServer{Players: []*PlayerClient{}},
+		GameServer{
+			Players:  []*Client{},
+			Requests: make(chan *GameRequest, 1),
+		},
 	}
+	go gameServers[0].Handle() //TODO move in refactor
 }
 
 func GetOutboundIP() net.IP {
@@ -66,7 +72,7 @@ func BlankPage(w http.ResponseWriter, r *http.Request) {
 func CharSelectPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Character Select")
 	charNames := []string{}
-	for _, char := range characters {
+	for _, char := range playerCharacters {
 		charNames = append(charNames, char.Name)
 	}
 
@@ -80,19 +86,10 @@ func CharSelectPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(page))
 }
 
-func DMPage(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("DM PAge")
-	fmt.Fprintf(w, "DM PAGE")
-}
-
-func DMSocket(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "DM SOCKET")
-}
-
 //this is super gross and janky, will be refactoring all the page preprocessing once scope is known
 func CharacterPage(w http.ResponseWriter, r *http.Request) {
 	charName := strings.Split(html.EscapeString(r.URL.Path), "/")[2]
-	if _, ok := characters[charName]; !ok {
+	if _, ok := playerCharacters[charName]; !ok {
 		fmt.Println("Error: Character not found:", charName)
 		fmt.Fprintf(w, "404 Character Not Found!")
 		return
@@ -100,7 +97,8 @@ func CharacterPage(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Character Page: ", charName)
 	page := pages["CharacterPage"]
-	charData := characters[charName]
+	charData := playerCharacters[charName]
+
 	page = bytes.Replace(page, []byte("##NAME##"), []byte(charData.Name), 1)
 	page = bytes.Replace(page, []byte("##STATS##"), generateStatChart(charData), 1)
 	page = bytes.Replace(page, []byte("##SKILLS##"), generateSkillChart(charData), 1)
@@ -165,18 +163,17 @@ func CharacterEditPage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "CHARACTER EDIT")
 }
 
+var upgrader = websocket.Upgrader{ //TODO: Put this somewhere better
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+}
+
 func PlayerSocket(w http.ResponseWriter, r *http.Request) {
 	charName := strings.Split(r.URL.Path, "/")[2]
-	if _, ok := characters[charName]; !ok {
+	if _, ok := playerCharacters[charName]; !ok {
 		fmt.Println(charName, "Does not exist!")
 		return
 	}
-	var upgrader = websocket.Upgrader{ //TODO: Put this somewhere better
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-	}
-
-	log.Println("Socket Connecting!")
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 
 	ws, err := upgrader.Upgrade(w, r, nil)
@@ -185,12 +182,44 @@ func PlayerSocket(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Println("Socket Connected! ", charName)
 
-	client := &PlayerClient{
-		conn:      ws,
-		char:      characters[charName],
-		requests:  make(chan []byte, 10),
-		responses: make(chan []byte, 10),
+	gameServers[0].AddClient(playerCharacters[charName], ws) //TODO: Scale this shit up yo
+	//client.Start()
+}
+
+func DMPage(w http.ResponseWriter, r *http.Request) {
+	page := pages["DMPage"]
+
+	page = bytes.Replace(page, []byte("##CHARACTERS##"), generateCharacterCardList(), 1)
+
+	fmt.Fprintf(w, string(page))
+}
+
+func generateCharacterCardList() []byte {
+	list := make([]byte, 1000) //TODO
+	for char := range playerCharacters {
+		list = append(list, generateCharacterCard(playerCharacters[char])...)
 	}
-	gameServers[0].AddPlayerClient(client) //TODO: Scale this shit up yo
-	client.Start()
+	return list
+}
+
+func generateCharacterCard(char *Character) []byte {
+	newPage := make([]byte, len(pages["CharacterCard"]))
+	copy(newPage, pages["CharacterCard"])
+
+	newPage = bytes.Replace(newPage, []byte("##NAME##"), []byte(char.Name), 1)
+
+	return newPage
+}
+
+func DMSocket(w http.ResponseWriter, r *http.Request) {
+	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println("DM Socket Connected!")
+
+	gameServers[0].AddClient(nil, ws) //TODO: Scale this shit up yo
+	//client.Start()
 }

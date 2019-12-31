@@ -19,7 +19,7 @@ var randy *rand.Rand
 var rules Rules
 var globals Globals
 var itemData map[string]Item //this holds the item "definitions", same struct as the items players have, TODO: Make player's weapons "instances" so they can eventually have stats like "status"
-var characters map[string]*Character
+var playerCharacters map[string]*Character
 var gameServers []GameServer
 
 var newline = []byte{'\n'}
@@ -92,9 +92,11 @@ func refresh() {
 		time.Sleep(1 * time.Second)
 		pages["CharSelectPage"] = LoadTextFile("pages\\CharSelect.html")
 		pages["CharacterPage"] = LoadTextFile("pages\\Character.html")
+		pages["DMPage"] = LoadTextFile("pages\\DM.html")
 		pages["ItemCard"] = LoadTextFile("pages\\ItemCard.html")
 		pages["SkillChartElement"] = LoadTextFile("pages\\SkillChartElement.html")
 		pages["StatusChart"] = LoadTextFile("pages\\StatusChart.html")
+		pages["CharacterCard"] = LoadTextFile("pages\\CharacterCard.html")
 
 	}
 }
