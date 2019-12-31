@@ -80,30 +80,36 @@
     return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
   }
 
-  function encodeRequest(requestType, message) {//uint16, string
-    //encReq
+  var encoder = new TextEncoder("utf-8")
+  var decoder = new TextDecoder("utf-8")
 
-    return encReq
+  function encodeRequest(requestType, message) {//number, string
+    if (requestType > 256) {
+      console.log("ERROR: Request type number too large, upper bound is 256")
+      return null
+    }
+    return String.fromCharCode(requestType) + message
   }
 
   function decodeResponse(event) {
-    let data=new Uint8Array(event.data)
+    console.log(event.data)
+    let data = new Uint8Array(event.data)
     console.log(data)
-    type = data[1]*256+data[0]//Uint16Array.from([ary[0],ary[1]])
-    console.log(type)
-    message = new TextDecoder("utf-8").decode(data.slice(2))
-    return {"type":type,"message":message}
+    return { "type": data[0], "message": decoder.decode(data.slice(1)) }
+
   }
 
   //https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent
   socket.onmessage = function (event) {
     response = decodeResponse(event)
     console.log(response)
+    //socket.send(encodeRequest(10,"cheekibreeki"))
   };
 
   socket.onopen = function (event) {
     console.log("Connected");
-    socket.send("BLYAT");//encodeRequest(0,"ANUUUUU"))
+    //TODO: NULL CHECK
+    socket.send(encodeRequest(123, "ANUUUUU"))
   };
 
   socket.onclose = function (event) {
@@ -117,4 +123,12 @@
   socket.onerror = function (error) {
     console.log(`[error] ${error.message}`);
   };
+
+
+
+  /*let data=new Uint8Array(event.data)
+    console.log(data)
+    type = data[1]*256+data[0]//Uint16Array.from([ary[0],ary[1]])
+    console.log(type)
+    message = new TextDecoder("utf-8").decode(data.slice(2))*/
 </script>

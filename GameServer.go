@@ -1,14 +1,13 @@
 package main
 
 import (
-	"encoding/binary"
 	"fmt"
 
 	"github.com/gorilla/websocket"
 )
 
 type GameRequest struct {
-	RequestType uint16
+	RequestType uint8
 	MessageType int
 	Message     []byte
 	Client      *Client
@@ -39,7 +38,8 @@ func (gs *GameServer) Handle() {
 	for {
 		select {
 		case req := <-gs.Requests:
-			response := EncodeResponse(uint16(65020), []byte("[response!]"), websocket.TextMessage)
+			response := EncodeResponse(req.RequestType, req.Message, websocket.TextMessage)
+			fmt.Println("SENDING RESPONSE: ", response[0], string(response[1:]))
 			if err := req.Client.conn.WriteMessage(2, response); err != nil {
 				fmt.Println(err)
 				continue
@@ -72,6 +72,7 @@ func (pc *Client) listener() {
 		}
 
 		requestType, data := DecodeRequest(messageType, rawMessage) //websocket.BinaryMessage, websocket.TextMessage
+		fmt.Println("REQUEST RECEIVED: ", requestType, string(data))
 		pc.requests <- &GameRequest{
 			MessageType: messageType,
 			RequestType: requestType,
@@ -87,8 +88,8 @@ func (pc *Client) listener() {
 	}
 }
 
-func DecodeRequest(msgType int, rawMsg []byte) (uint16, []byte) {
-	fmt.Println(msgType, string(rawMsg))
+func DecodeRequest(msgType int, rawMsg []byte) (uint8, []byte) {
+	/*fmt.Println(msgType, string(rawMsg))
 	if len(rawMsg) < 3 {
 		fmt.Println("Message too small, skipping")
 		return 0, []byte("")
@@ -97,15 +98,19 @@ func DecodeRequest(msgType int, rawMsg []byte) (uint16, []byte) {
 	fmt.Println("RAW: ", rrt)
 	requestType := binary.LittleEndian.Uint16(rrt)
 	fmt.Println("TYPE: ", requestType)
+	*/
 
-	return requestType, rawMsg[2:]
+	return rawMsg[0], rawMsg[1:]
 }
 
-func EncodeResponse(responseType uint16, message []byte, messageType int) []byte {
-	response := make([]byte, len(message)+2)
+func EncodeResponse(responseType uint8, message []byte, messageType int) []byte {
+	/*response := make([]byte, len(message)+2)
 	binary.LittleEndian.PutUint16(response[0:], responseType)
 	copy(response[2:], message)
-	fmt.Println(string(response), response)
+	fmt.Println(string(response), response)*/
+	response := make([]byte, 1+len(message))
+	response[0] = responseType
+	copy(response[1:], message)
 	return response //[]byte("ENCODED RESPONSE")
 }
 
