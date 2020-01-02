@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/list"
 	"fmt"
 
 	"github.com/gorilla/websocket"
@@ -14,9 +15,10 @@ type GameRequest struct {
 }
 
 type GameServer struct {
-	Players  []*Client
-	DM       *Client
-	Requests chan *GameRequest
+	Players      []*Client
+	DM           *Client
+	Requests     chan *GameRequest
+	ChatMessages *list.List
 }
 
 func (gs *GameServer) AddClient(char *Character, ws *websocket.Conn) {
@@ -38,69 +40,47 @@ func (gs *GameServer) Handle() {
 	for {
 		select {
 		case req := <-gs.Requests:
-			response := EncodeResponse(req.RequestType, req.Message, websocket.TextMessage)
-			fmt.Println("SENDING RESPONSE: ", response[0], string(response[1:]))
-			if err := req.Client.conn.WriteMessage(2, response); err != nil {
-				fmt.Println(err)
+			fmt.Println("Request: ", req.RequestType, req.Client.conn.RemoteAddr(), string(req.Message))
+			/*
+				response := EncodeResponse(req.RequestType, req.Message, websocket.TextMessage)
+				fmt.Println("SENDING RESPONSE: ", response[0], string(response[1:]))
+				if err := req.Client.conn.WriteMessage(2, response); err != nil {
+					fmt.Println(err)
+					continue
+				}
+			*/
+			funk, ok := RequestRoutingMap[req.RequestType]
+			if !ok {
+				fmt.Println("ERROR: Request type not valid", req.RequestType)
+				response := EncodeResponse(req.RequestType, []byte("ERR"), websocket.BinaryMessage)
+				if err := req.Client.conn.WriteMessage(2, response); err != nil {
+					fmt.Println(err)
+					continue
+				}
 				continue
 			}
+			funk(req, gs) //maybe make async?
 		}
 	}
 }
 
-type Client struct {
-	conn      *websocket.Conn
-	character *Character
-	requests  chan *GameRequest
-	//responses chan []byte
+var RequestRoutingMap = map[uint8]func(*GameRequest, *GameServer){
+	0: skillCheck,
+	1: getAllChatMessages,
+	2: sendChatMessage,
 }
 
-func (pc *Client) Start() {
-	go pc.listener()
-	//go pc.writer()
+func skillCheck(gr *GameRequest, gs *GameServer) {
+
 }
 
-//string request format: <uint16 requestType>:<string data>
-func (pc *Client) listener() {
-	for {
-		messageType, rawMessage, err := pc.conn.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				fmt.Printf("error: %v", err)
-			}
-			break
-		}
+func getAllChatMessages(gr *GameRequest, gs *GameServer) {
 
-		requestType, data := DecodeRequest(messageType, rawMessage) //websocket.BinaryMessage, websocket.TextMessage
-		fmt.Println("REQUEST RECEIVED: ", requestType, string(data))
-		pc.requests <- &GameRequest{
-			MessageType: messageType,
-			RequestType: requestType,
-			Message:     data,
-			Client:      pc,
-		}
-
-		//testBytes := make([]byte, 16)
-		//binary.LittleEndian.PutUint16(testBytes[0:], uint16(12))
-		//testBytes[2:] = [12]byte{`0`, `1`}
-		//testreq, testdata := ParseRequest(websocket.TextMessage, testBytes)
-		//fmt.Println("TEST: ", testreq, testdata)
-	}
 }
 
-func DecodeRequest(msgType int, rawMsg []byte) (uint8, []byte) {
-	/*fmt.Println(msgType, string(rawMsg))
-	if len(rawMsg) < 3 {
-		fmt.Println("Message too small, skipping")
-		return 0, []byte("")
-	}
-	rrt := rawMsg[0:2]
-	fmt.Println("RAW: ", rrt)
-	requestType := binary.LittleEndian.Uint16(rrt)
-	fmt.Println("TYPE: ", requestType)
-	*/
-
-	return rawMsg[0], rawMsg[1:]
+func sendChatMessage(gr *GameRequest, gs *GameServer) {
+	//add chat message to chat messages
+	//send message to everyone
 }
 
 func EncodeResponse(responseType uint8, message []byte, messageType int) []byte {

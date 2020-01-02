@@ -31,14 +31,6 @@ func SetupServer() {
 	router = mux.NewRouter()
 	SetRoutes()
 	fmt.Println("STARTED; IP:", GetOutboundIP())
-
-	gameServers = []GameServer{
-		GameServer{
-			Players:  []*Client{},
-			Requests: make(chan *GameRequest, 1),
-		},
-	}
-	go gameServers[0].Handle() //TODO move in refactor
 }
 
 func GetOutboundIP() net.IP {

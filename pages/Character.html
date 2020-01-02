@@ -10,106 +10,150 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 </head>
 
-<body class="bg-light">
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-12 col-sm-12 col-md-5 col-lg-4 border" id="character">
+<body class="bg-light m-0">
+  <div class="row m-0 p-0">
+    <div class="col p-0">
+      <div class="container-fluid">
         <div class="row">
-          <h3 id="name">##NAME##</h3>
-        </div>
-        <div class="row my-3 border">
-          <div class="col-4 col-sm-4 col-md-4 col-lg-4">
-            <table class="table-striped table-hover p-0" id="stats">
-              ##STATS##
-            </table>
-          </div>
-          <div class="col-8 col-sm-8 col-md-8 col-lg-8">
-            <div class="row p-0" id="skills">
-              ##SKILLS##
+          <div class="col-12 col-sm-12 col-md-5 col-lg-4 border" id="character">
+            <div class="row">
+              <h3 id="name">##NAME##</h3>
+            </div>
+            <div class="row my-3 border">
+              <div class="col-4 col-sm-4 col-md-4 col-lg-4">
+                <table class="table-striped table-hover p-0" id="stats">
+                  ##STATS##
+                </table>
+              </div>
+              <div class="col-8 col-sm-8 col-md-8 col-lg-8">
+                <div class="row p-0" id="skills">
+                  ##SKILLS##
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      ##STATUSCHART##
+          ##STATUSCHART##
 
-      <div class="col border">
-        <div class="row">
-          <h3>Items</h3>
-        </div>
-        <div class="col-8 col-sm-8 col-md-8 col-lg-8" id="equipped">
-          ##CURRENT_WEAPON##
-        </div>
-        <div class="container-fluid">
-          <div class="row" id="items">
-            ##ITEMS##
+          <div class="col border">
+            <div class="row">
+              <h3>Items</h3>
+            </div>
+            <div class="col-8 col-sm-8 col-md-8 col-lg-8" id="equipped">
+              ##CURRENT_WEAPON##
+            </div>
+            <div class="container-fluid">
+              <div class="row" id="items">
+                ##ITEMS##
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      <!--
-      <div class="col">
-        <div class="form-group">
-          <label for="usr">Name:</label>
-          <input type="text" class="form-control" id="msgType">
-        </div>
-        <div class="form-group">
-          <label for="usr">Name:</label>
-          <input type="text" class="form-control" id="usr">
-        </div>
-      </div>
-    -->
-      <div class="col-12 bg-dark" id="canvasWrapper">
-        <canvas id="canvas" width="800" height="600"></canvas>
-      </div>
 
+          <div class="col-12 bg-dark" id="canvasWrapper">
+            <canvas id="canvas" width="800" height="600"></canvas>
+          </div>
+
+        </div>
+      </div>
     </div>
+    <div class="col-2 p-0 m-0 bg-dark">IF YOU SEE THIS IT'S BAD</div>
   </div>
+
+  <div class="col-2 navbar-inverse Fixed bg-light" position="affix">
+    <!--TEXT-->
+      <ul class="list-group pull-down" id="chat">
+        <li class="list-group-item align-bottom">First item</li>
+        <li class="list-group-item align-bottom">asd item</li>
+      </ul>
+      <!--TEXT SUBMISSION-->
+        <div class="container-fluid pull-down">
+          <button class="btn btn-secondary" type="button" id="sendChat">Send</button>
+          <input type="text" class="form-control" id="text">
+        </div>
+    </div>
 </body>
 
 </html>
 
-<script>
-  var charName = document.getElementById("name").innerHTML
-  let socket = new WebSocket("ws://192.168.0.12:8082/player/" + charName + "/socket");
-  socket.binaryType = 'arraybuffer';
+<style>
+  .Fixed {
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    height: 100vh;
 
+    box-shadow: 0 15px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  #chat {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  #chat li {
+    padding: 5px 10px;
+  }
+
+  #chat li:nth-child(odd) {
+    background: #eee;
+  }
+
+  #chat {
+    margin-bottom: 40px
+  }
+</style>
+
+<script>
+  $('.pull-down').each(function () {
+    var $this = $(this);
+    $this.css('margin-top', $this.parent().height() - $this.height())
+  });
+  var charName = document.getElementById("name").innerHTML
   var canvas = document.getElementById("canvas");
   var cc = canvas.getContext("2d");
+  let socket = new WebSocket("ws://192.168.0.12:8082/player/" + charName + "/socket");
 
+  socket.binaryType = 'arraybuffer';
+  //var encoder = new TextEncoder("utf-8")
+  var decoder = new TextDecoder("utf-8")
   var toType = function (obj) {//from: http://javascriptweblog.wordpress.com/2011/08/08/fixing-the-javascript-typeof-operator/
     return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
   }
 
-  var encoder = new TextEncoder("utf-8")
-  var decoder = new TextDecoder("utf-8")
-
   function encodeRequest(requestType, message) {//number, string
-    if (requestType > 256) {
-      console.log("ERROR: Request type number too large, upper bound is 256")
+    if (requestType > 255) {
+      console.log("ERROR: Request type number too large, upper bound is 255")
       return null
     }
     return String.fromCharCode(requestType) + message
   }
 
   function decodeResponse(event) {
-    console.log(event.data)
     let data = new Uint8Array(event.data)
-    console.log(data)
     return { "type": data[0], "message": decoder.decode(data.slice(1)) }
+  }
+
+  function ResponseHandler(response) {
 
   }
 
   //https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent
   socket.onmessage = function (event) {
     response = decodeResponse(event)
-    console.log(response)
-    //socket.send(encodeRequest(10,"cheekibreeki"))
+    ResponseHandler(response)
   };
 
   socket.onopen = function (event) {
     console.log("Connected");
     //TODO: NULL CHECK
-    socket.send(encodeRequest(123, "ANUUUUU"))
+    //sendRequest(encodeRequest(256, "THIS SHOULD FAIL"))
+    //sendRequest(encodeRequest(0, "CHEEKI BREEKI"))
+    encReq = encodeRequest(256, "THIS SHOULD FAIL")
+    if (encReq != null)
+      socket.send(encReq)
+    socket.send(encodeRequest(0, "CHEEKI BREEKI"))
+
   };
 
   socket.onclose = function (event) {

@@ -23,18 +23,43 @@
 <script>
   let socket = new WebSocket("ws://192.168.0.12:8082/dm/socket");
 
+  socket.binaryType = 'arraybuffer';
+  //var encoder = new TextEncoder("utf-8")
+  var decoder = new TextDecoder("utf-8")
   var toType = function (obj) {//from: http://javascriptweblog.wordpress.com/2011/08/08/fixing-the-javascript-typeof-operator/
     return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
   }
 
-  socket.onopen = function (event) {
-    console.log("Connected");
-    socket.send("CHEEKI BREEKI")
-  };
+  function encodeRequest(requestType, message) {//number, string
+    if (requestType > 256) {
+      console.log("ERROR: Request type number too large, upper bound is 256")
+      return null
+    }
+    return String.fromCharCode(requestType) + message
+  }
+
+  function decodeResponse(event) {
+    console.log(event.data)
+    let data = new Uint8Array(event.data)
+    console.log(data)
+    return { "type": data[0], "message": decoder.decode(data.slice(1)) }
+  }
+
+  function ResponseHandler(response) {
+
+  }
 
   //https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent
   socket.onmessage = function (event) {
-    console.log(event.data)
+    response = decodeResponse(event)
+    console.log(response)
+    ResponseHandler(response)
+  };
+
+  socket.onopen = function (event) {
+    console.log("Connected");
+    //TODO: NULL CHECK
+    socket.send(encodeRequest(123, "ANUUUUU"))
   };
 
   socket.onclose = function (event) {

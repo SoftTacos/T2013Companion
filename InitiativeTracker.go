@@ -84,6 +84,13 @@ func SetupGame() {
 	randy = rand.New(rand.NewSource(time.Now().Unix()))
 	ReadItemData(LoadTextFile("data\\items.yaml"))
 	ReadRuleData(LoadTextFile("data\\rules.yaml"))
+	gameServers = []GameServer{
+		GameServer{
+			Players:  []*Client{},
+			Requests: make(chan *GameRequest, 1),
+		},
+	}
+	go gameServers[0].Handle() //TODO move in refactor
 }
 
 //refresh the pages so I don't have to restart the server every time I update a page
