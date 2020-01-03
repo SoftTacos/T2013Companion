@@ -6,6 +6,7 @@ package main
 
 import (
 	"bufio"
+	"container/list"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -86,8 +87,10 @@ func SetupGame() {
 	ReadRuleData(LoadTextFile("data\\rules.yaml"))
 	gameServers = []GameServer{
 		GameServer{
-			Players:  []*Client{},
-			Requests: make(chan *GameRequest, 1),
+			Clients:      make(map[uint]*Client),
+			Requests:     make(chan *GameRequest, 1),
+			ChatMessages: list.New(),
+			NextClientID: 1,
 		},
 	}
 	go gameServers[0].Handle() //TODO move in refactor

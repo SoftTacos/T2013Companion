@@ -7,21 +7,23 @@ import (
 )
 
 type Client struct {
-	conn      *websocket.Conn
-	character *Character
-	requests  chan *GameRequest
+	ID         uint
+	conn       *websocket.Conn
+	character  *Character
+	requests   chan *GameRequest
+	gameServer *GameServer
 	//responses chan []byte
 }
 
-func (pc *Client) Start() {
-	go pc.listener()
+func (c *Client) Start() {
+	go c.listener()
 	//go pc.writer()
 }
 
 //string request format: <uint16 requestType>:<string data>
-func (pc *Client) listener() {
+func (c *Client) listener() {
 	for {
-		messageType, rawMessage, err := pc.conn.ReadMessage()
+		messageType, rawMessage, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				fmt.Printf("error: %v", err)
@@ -31,11 +33,11 @@ func (pc *Client) listener() {
 
 		requestType, data := DecodeRequest(messageType, rawMessage) //websocket.BinaryMessage, websocket.TextMessage
 		//fmt.Println("REQUEST RECEIVED: ", requestType, string(data))
-		pc.requests <- &GameRequest{
+		c.requests <- &GameRequest{
 			MessageType: messageType,
 			RequestType: requestType,
 			Message:     data,
-			Client:      pc,
+			Client:      c,
 		}
 
 		//testBytes := make([]byte, 16)
@@ -44,6 +46,9 @@ func (pc *Client) listener() {
 		//testreq, testdata := ParseRequest(websocket.TextMessage, testBytes)
 		//fmt.Println("TEST: ", testreq, testdata)
 	}
+	//client has closed the connection
+	fmt.Println("Client has closed the connection: ", c.ID)
+	delete(c.gameServer.Clients, c.ID)
 }
 
 func DecodeRequest(msgType int, rawMsg []byte) (uint8, []byte) {

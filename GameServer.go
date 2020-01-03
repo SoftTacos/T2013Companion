@@ -15,7 +15,8 @@ type GameRequest struct {
 }
 
 type GameServer struct {
-	Players      []*Client
+	Clients      map[uint]*Client
+	NextClientID uint
 	DM           *Client
 	Requests     chan *GameRequest
 	ChatMessages *list.List
@@ -23,15 +24,17 @@ type GameServer struct {
 
 func (gs *GameServer) AddClient(char *Character, ws *websocket.Conn) {
 	newClient := &Client{
-		conn:      ws,
-		character: char,
-		requests:  gs.Requests,
-		//responses: make(chan []byte, 1),
+		ID:         gs.NextClientID,
+		conn:       ws,
+		character:  char,
+		requests:   gs.Requests,
+		gameServer: gs,
 	}
 	if char == nil {
-		gs.DM = newClient
+		gs.Clients[0] = newClient
 	} else {
-		gs.Players = append(gs.Players, newClient)
+		gs.Clients[gs.NextClientID] = newClient
+		gs.NextClientID++
 	}
 	newClient.Start()
 }
@@ -64,6 +67,12 @@ func (gs *GameServer) Handle() {
 	}
 }
 
+func (gs *GameServer) RemoveClient(client *Client) {
+	if gs.DM == client {
+
+	}
+}
+
 var RequestRoutingMap = map[uint8]func(*GameRequest, *GameServer){
 	0: skillCheck,
 	1: getAllChatMessages,
@@ -80,7 +89,13 @@ func getAllChatMessages(gr *GameRequest, gs *GameServer) {
 
 func sendChatMessage(gr *GameRequest, gs *GameServer) {
 	//add chat message to chat messages
+	gs.ChatMessages.PushBack(gr.Message)
+	fmt.Println(gs.ChatMessages.Back().Value)
 	//send message to everyone
+	for _, client := range gs.Clients {
+		sendResponse(EncodeResponse(2, gr.Message, gr.MessageType), client)
+	}
+
 }
 
 func EncodeResponse(responseType uint8, message []byte, messageType int) []byte {
@@ -92,6 +107,16 @@ func EncodeResponse(responseType uint8, message []byte, messageType int) []byte 
 	response[0] = responseType
 	copy(response[1:], message)
 	return response //[]byte("ENCODED RESPONSE")
+}
+
+func sendResponse(response []byte, client *Client) {
+	//response := EncodeResponse(req.RequestType, req.Message, websocket.TextMessage)
+	if err := client.conn.WriteMessage(2, response); err != nil {
+		fmt.Println("Error?", err)
+		return
+	}
+	fmt.Println("SENT RESPONSE: ", response[0], string(response[1:]))
+
 }
 
 /*

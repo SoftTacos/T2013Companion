@@ -10,7 +10,7 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 </head>
 
-<body class="bg-light m-0">
+<body class="bg-light m-0 p-0">
   <div class="row m-0 p-0">
     <div class="col p-0">
       <div class="container-fluid">
@@ -59,24 +59,36 @@
     <div class="col-2 p-0 m-0 bg-dark">IF YOU SEE THIS IT'S BAD</div>
   </div>
 
-  <div class="col-2 navbar-inverse Fixed bg-light" position="affix">
-    <!--TEXT-->
-      <ul class="list-group pull-down" id="chat">
-        <li class="list-group-item align-bottom">First item</li>
-        <li class="list-group-item align-bottom">asd item</li>
-      </ul>
-      <!--TEXT SUBMISSION-->
-        <div class="container-fluid pull-down">
-          <button class="btn btn-secondary" type="button" id="sendChat">Send</button>
-          <input type="text" class="form-control" id="text">
+  <div class="col-2 navbar-inverse Sidebar bg-light d-flex p-0 m-0">
+    <div class="d-flex flex-column" width="100%">
+      <div class="p-2 flex-grow-1"> </div>
+      <div class="p-2" id="chatbox">
+
+      </div>
+      <div>
+        <div class="pull-left">
+          <button type="button" class="btn" id="chatButton">send</button>
         </div>
+        <div>
+          <div class="input-group">
+            <input type="text" class="form-control" id="chatInput"/>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </body>
 
 </html>
 
 <style>
-  .Fixed {
+  .chatinput {
+    bottom: 10px;
+    vertical-align: bottom;
+    display: table-cell;
+  }
+
+  .Sidebar {
     position: fixed;
     top: 0px;
     right: 0px;
@@ -105,22 +117,44 @@
 </style>
 
 <script>
-  $('.pull-down').each(function () {
-    var $this = $(this);
-    $this.css('margin-top', $this.parent().height() - $this.height())
-  });
+  //SETUP
+  chatButton = document.getElementById("chatButton")
+  chatButton.addEventListener("click", sendChat)
+  chatInput = document.getElementById("chatInput")
+  chatbox = document.getElementById("chatbox")
+
   var charName = document.getElementById("name").innerHTML
   var canvas = document.getElementById("canvas");
   var cc = canvas.getContext("2d");
   let socket = new WebSocket("ws://192.168.0.12:8082/player/" + charName + "/socket");
-
   socket.binaryType = 'arraybuffer';
   //var encoder = new TextEncoder("utf-8")
   var decoder = new TextDecoder("utf-8")
   var toType = function (obj) {//from: http://javascriptweblog.wordpress.com/2011/08/08/fixing-the-javascript-typeof-operator/
     return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
   }
+  
+  //var responseRoutingMap = new Object();
+  //responseRoutingMap[2] = rChatMessage.call.bind(rChatMessage())
+  //case switch instead of map because js is spaghetti
+  function route(response){
+    switch(response.type){
+      case 0:
 
+        break;
+      case 1:
+        
+      break;
+      case 2:
+        rChatMessage(response)
+        break;
+      default:
+        console.log("ERROR: response type not found. ",response)
+        break;
+    }
+  }  
+  
+  // /SETUP
   function encodeRequest(requestType, message) {//number, string
     if (requestType > 255) {
       console.log("ERROR: Request type number too large, upper bound is 255")
@@ -134,26 +168,38 @@
     return { "type": data[0], "message": decoder.decode(data.slice(1)) }
   }
 
-  function ResponseHandler(response) {
+  function rChatMessage(response) {
+    //TODO: PARSE MESSAGE INTO NICE FORMAT
+    addChatMessage(response)
+  }
 
+  function addChatMessage(response){
+    var chatMsgElement = document.createElement("div")
+    chatMsgElement.classList.add("border")
+    chatMsgElement.innerHTML = response.message
+    chatbox.appendChild(chatMsgElement)
+  }
+
+  function ResponseHandler(response) {
+     bob = responseRoutingMap[response.type]
+     //bob(response)
+     console.log(response)
+     console.log(responseRoutingMap)
   }
 
   //https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent
   socket.onmessage = function (event) {
     response = decodeResponse(event)
-    ResponseHandler(response)
+    route(response)
   };
 
   socket.onopen = function (event) {
+    //SOCKET-DEPENDENT SETUP
+    //chatButton.onclick = sendChat
+    
     console.log("Connected");
-    //TODO: NULL CHECK
-    //sendRequest(encodeRequest(256, "THIS SHOULD FAIL"))
-    //sendRequest(encodeRequest(0, "CHEEKI BREEKI"))
-    encReq = encodeRequest(256, "THIS SHOULD FAIL")
-    if (encReq != null)
-      socket.send(encReq)
-    socket.send(encodeRequest(0, "CHEEKI BREEKI"))
-
+    //encReq = encodeRequest(2, "MESSAGE")
+    
   };
 
   socket.onclose = function (event) {
@@ -168,7 +214,13 @@
     console.log(`[error] ${error.message}`);
   };
 
-
+  function sendChat() {    console.log("SENDING CHAT")
+    message = chatInput.value
+    chatInput.value = ""
+    encReq = encodeRequest(2, message)
+    if (encReq != null)
+      socket.send(encReq)
+  }
 
   /*let data=new Uint8Array(event.data)
     console.log(data)
