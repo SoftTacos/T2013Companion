@@ -18,8 +18,15 @@ import (
 var pages map[string][]byte
 var router *mux.Router
 
-func SetupServer() {
+func SetupServer() { //TODO: Refactor into "Load all file from these pages and put in map at "filename"
 	pages = make(map[string][]byte)
+	LoadPages()
+	router = mux.NewRouter()
+	SetRoutes()
+	fmt.Println("STARTED; IP:", GetOutboundIP())
+}
+
+func LoadPages() {
 	pages["CharacterSelectPage"] = LoadTextFile("pages\\CharSelect.html")
 	pages["CharacterPage"] = LoadTextFile("pages\\Character.html")
 	pages["DMPage"] = LoadTextFile("pages\\DM.html")
@@ -27,10 +34,10 @@ func SetupServer() {
 	pages["SkillChartElement"] = LoadTextFile("pages\\SkillChartElement.html")
 	pages["StatusChart"] = LoadTextFile("pages\\StatusChart.html")
 	pages["CharacterCard"] = LoadTextFile("pages\\CharacterCard.html")
+	pages["ClientFunctions.js"] = LoadTextFile("js\\ClientFunctions.js")
+	pages["DMFunctions.js"] = LoadTextFile("js\\DMFunctions.js")
+	pages["PlayerFunctions.js"] = LoadTextFile("js\\PlayerFunctions.js")
 
-	router = mux.NewRouter()
-	SetRoutes()
-	fmt.Println("STARTED; IP:", GetOutboundIP())
 }
 
 func GetOutboundIP() net.IP {
@@ -51,6 +58,7 @@ func SetRoutes() {
 	router.HandleFunc("/player/{[A-Za-z]+}", CharacterPage)
 	router.HandleFunc("/player/{[A-Za-z]+}/edit", CharacterEditPage)
 	router.HandleFunc("/player/{[A-Za-z]+}/socket", PlayerSocket)
+	router.HandleFunc("/js/{[A-Za-z]+}.js", ServeJsFile)
 
 	http.Handle("/", router)
 }
@@ -214,4 +222,10 @@ func DMSocket(w http.ResponseWriter, r *http.Request) {
 
 	gameServers[0].AddClient(nil, ws) //TODO: Scale this shit up yo
 	//client.Start()
+}
+
+func ServeJsFile(w http.ResponseWriter, r *http.Request) {
+	pageName := strings.Split(html.EscapeString(r.URL.Path), "/")[2]
+	page := pages[pageName]
+	fmt.Fprintf(w, string(page))
 }

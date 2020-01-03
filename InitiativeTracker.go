@@ -100,13 +100,7 @@ func SetupGame() {
 func refresh() {
 	for {
 		time.Sleep(1 * time.Second)
-		pages["CharSelectPage"] = LoadTextFile("pages\\CharSelect.html")
-		pages["CharacterPage"] = LoadTextFile("pages\\Character.html")
-		pages["DMPage"] = LoadTextFile("pages\\DM.html")
-		pages["ItemCard"] = LoadTextFile("pages\\ItemCard.html")
-		pages["SkillChartElement"] = LoadTextFile("pages\\SkillChartElement.html")
-		pages["StatusChart"] = LoadTextFile("pages\\StatusChart.html")
-		pages["CharacterCard"] = LoadTextFile("pages\\CharacterCard.html")
+		LoadPages()
 
 	}
 }

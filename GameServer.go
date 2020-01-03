@@ -115,7 +115,7 @@ func sendResponse(response []byte, client *Client) {
 		fmt.Println("Error?", err)
 		return
 	}
-	fmt.Println("SENT RESPONSE: ", response[0], string(response[1:]))
+	//fmt.Println("SENT RESPONSE: ", response[0], string(response[1:]))
 
 }
 

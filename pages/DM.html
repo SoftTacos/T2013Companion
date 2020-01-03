@@ -10,67 +10,49 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 </head>
 
-<body class="bg-light">
-  <div class="row">
+<body class="bg-light m-0 p-0">
+  <div class="row m-0 p-0">
     <div class="col-8 col-sm-8 col-md-5 col-lg-4 border" id="characters">
       ##CHARACTERS##
+    </div>
+
+    <div class="col-12 bg-dark" id="canvasWrapper">
+      <canvas id="canvas" width="800" height="600"></canvas>
+    </div>
+  </div>
+
+  <div class="col-2 navbar-inverse Sidebar bg-light d-flex p-0 m-0">
+    <div class="d-flex flex-column" width="100%">
+      <div class="p-2 flex-grow-1"> </div>
+      <div class="p-2" id="chatbox">
+
+      </div>
+      <div>
+        <div class="pull-left">
+          <button type="button" class="btn" id="chatButton">send</button>
+        </div>
+        <div>
+          <div class="input-group">
+            <input type="text" class="form-control" id="chatInput" />
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </body>
 
 </html>
 
-<script>
-  let socket = new WebSocket("ws://192.168.0.12:8082/dm/socket");
+<style>
+  .Sidebar {
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    height: 100vh;
 
-  socket.binaryType = 'arraybuffer';
-  //var encoder = new TextEncoder("utf-8")
-  var decoder = new TextDecoder("utf-8")
-  var toType = function (obj) {//from: http://javascriptweblog.wordpress.com/2011/08/08/fixing-the-javascript-typeof-operator/
-    return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+    box-shadow: 0 15px 20px rgba(0, 0, 0, 0.3);
   }
+</style>
 
-  function encodeRequest(requestType, message) {//number, string
-    if (requestType > 256) {
-      console.log("ERROR: Request type number too large, upper bound is 256")
-      return null
-    }
-    return String.fromCharCode(requestType) + message
-  }
-
-  function decodeResponse(event) {
-    console.log(event.data)
-    let data = new Uint8Array(event.data)
-    console.log(data)
-    return { "type": data[0], "message": decoder.decode(data.slice(1)) }
-  }
-
-  function ResponseHandler(response) {
-
-  }
-
-  //https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent
-  socket.onmessage = function (event) {
-    response = decodeResponse(event)
-    console.log(response)
-    ResponseHandler(response)
-  };
-
-  socket.onopen = function (event) {
-    console.log("Connected");
-    //TODO: NULL CHECK
-    socket.send(encodeRequest(123, "ANUUUUU"))
-  };
-
-  socket.onclose = function (event) {
-    if (event.wasClean) {
-      console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
-    } else {
-      console.log('[close] Connection died');
-    }
-  };
-
-  socket.onerror = function (error) {
-    console.log(`[error] ${error.message}`);
-  };
-</script>
+<script type="text/javascript" src="/js/DMFunctions.js"></script>
+<script type="text/javascript" src="/js/ClientFunctions.js"></script>
