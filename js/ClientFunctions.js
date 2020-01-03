@@ -22,17 +22,35 @@ function decodeResponse(event) {
   return { "type": data[0], "message": decoder.decode(data.slice(1)) }
 }
 
-function addChatMessage(response) {
-  console.log("RECEIVING CHAT")
+function requestOldChatMessages() {
+  encReq = encodeRequest(1, "")
+  if (encReq != null)
+    socket.send(encReq)
+}
+
+function receiveOldChatMessages(response) {
+  messages = response.message.split(",")
+  for(message of messages){
+    addChatMessage(message)
+  }
+}
+
+function receiveChatMessage(response) {
+  addChatMessage(response.message)
+}
+
+function addChatMessage(message) {
   var chatMsgElement = document.createElement("div")
   chatMsgElement.classList.add("border")
-  chatMsgElement.innerHTML = response.message
+  chatMsgElement.innerHTML = message
   chatbox.appendChild(chatMsgElement)
 }
 
 function sendChat() {
-  console.log("SENDING CHAT")
   message = chatInput.value
+  if (message.length < 1)
+    return
+  console.log("SENDING CHAT")
   chatInput.value = ""
   encReq = encodeRequest(2, message)
   if (encReq != null)
@@ -45,12 +63,8 @@ socket.onmessage = function (event) {
 };
 
 socket.onopen = function (event) {
-  //SOCKET-DEPENDENT SETUP
-  //chatButton.onclick = sendChat
-
   console.log("Connected");
-  //encReq = encodeRequest(2, "MESSAGE")
-
+  requestOldChatMessages()
 };
 
 socket.onclose = function (event) {

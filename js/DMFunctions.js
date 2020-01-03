@@ -8,10 +8,10 @@ function route(response) {
 
       break;
     case 1:
-
+      receiveOldChatMessages(response)
       break;
     case 2:
-      addChatMessage(response)
+      receiveChatMessage(response)
       break;
     default:
       console.log("ERROR: response type not found. ", response)

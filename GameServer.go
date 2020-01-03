@@ -84,18 +84,26 @@ func skillCheck(gr *GameRequest, gs *GameServer) {
 }
 
 func getAllChatMessages(gr *GameRequest, gs *GameServer) {
-
+	if gs.ChatMessages.Len() == 0 {
+		return
+	}
+	messages := []byte{}
+	for e := gs.ChatMessages.Front(); e != nil; e = e.Next() {
+		message := append(e.Value.([]byte), []byte(",")...)
+		fmt.Println(message)
+		messages = append(messages, message...)
+	}
+	sendResponse(EncodeResponse(1, messages[0:len(messages)-1], gr.MessageType), gr.Client)
 }
 
 func sendChatMessage(gr *GameRequest, gs *GameServer) {
 	//add chat message to chat messages
+	fmt.Println(gr.Message)
 	gs.ChatMessages.PushBack(gr.Message)
-	fmt.Println(gs.ChatMessages.Back().Value)
 	//send message to everyone
 	for _, client := range gs.Clients {
 		sendResponse(EncodeResponse(2, gr.Message, gr.MessageType), client)
 	}
-
 }
 
 func EncodeResponse(responseType uint8, message []byte, messageType int) []byte {
