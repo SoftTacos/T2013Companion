@@ -6,12 +6,12 @@ socket.binaryType = 'arraybuffer';
 function route(response) {
   switch (response.type) {
     case 0:
-
+      receiveSkillCheck(response)
       break;
-    case 1:
+    case 10:
       receiveOldChatMessages(response)
       break;
-    case 2:
+    case 11:
       receiveChatMessage(response)
       break;
     default:

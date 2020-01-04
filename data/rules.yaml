@@ -37,3 +37,32 @@ skillnames:
  - SEC #Security
  - PIS #Sidearm
  - STR #Streetcraft
+---
+skillstatmap:
+ - AGR #Agriculture
+ - ANI #AnimalHusbandry
+ - AQU #Aquatics
+ - ARC #Archery
+ - ART #Artisan
+ - AVI #Aviation
+ - CLI #Climbing
+ - CMD #Command
+ - COM #Computing
+ - CON #Construction
+ - DEC #Deception
+ - DRI #Driving
+ - ELE #Electronics
+ - FIE #Fieldcraft
+ - UNA #Unarmed
+ - HAW #HandWeapons
+ - INS #Instruction
+ - INT #Intimidation
+ - RIF #Longarm
+ - MEC #Mechanics
+ - MED #Medicine
+ - RID #Mounts
+ - PRF #Performance
+ - PRS #Persuasion
+ - SEC #Security
+ - PIS #Sidearm
+ - STR #Streetcraft

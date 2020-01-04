@@ -68,6 +68,7 @@ func ReadRuleData(data []byte) {
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
+	//skillStatMap :=
 }
 
 func ReadItemData(data []byte) {

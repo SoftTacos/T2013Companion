@@ -15,12 +15,96 @@
     <div class="col-8 col-sm-8 col-md-5 col-lg-4 border" id="characters">
       ##CHARACTERS##
     </div>
-
-    <div class="col-12 bg-dark" id="canvasWrapper">
+    <div class="col-2 m-0 p-0">
+      <form>
+        <div class="form-group">
+          <span class="help-block">
+            Charater skill check
+          </span>
+        </div>
+        <div class="form-group">
+          <label>Character</label>
+          <select class="form-control" id="characterCheckOption" type="text">
+            <option value="1" selected="">Moose</option>
+            <option value="2">Luna</option>
+            <option value="3">Max</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Stat</label>
+          <select class="form-control" id="statCheckOption" type="text">
+            <option selected="">AWA</option>
+            <option >CDN</option>
+            <option >FIT</option>
+            <option >MUS</option>
+            <option >COG</option>
+            <option >PER</option>
+            <option >RES</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Skill</label>
+          <select class="form-control" id="skillCheckOption" type="text">
+            <option value="6" selected="">AGR</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Bonus / Malus</label>
+          <select class="form-control" id="bonusCheckOption" type="text">
+            <option value="-8">-8</option>
+            <option value="-7">-7</option>
+            <option value="-6">-6</option>
+            <option value="-5">-5</option>
+            <option value="-4">-4</option>
+            <option value="-3">-3</option>
+            <option value="-2">-2</option>
+            <option value="-1">-1</option>
+            <option value="0" selected="">0</option>
+            <option value="1">+1</option>
+            <option value="2">+2</option>
+            <option value="3">+3</option>
+            <option value="4">+4</option>
+            <option value="5">+5</option>
+            <option value="6">+6</option>
+            <option value="7">+7</option>
+            <option value="8">+8</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Difficulty</label>
+          <select class="form-control" id="difficultyCheckOption" type="text">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected="">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+            <option value="13">13</option>
+            <option value="14">14</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <button type="button" class="btn btn-primary" onclick="requestStatCheck()">Stat Check</button>
+          <button type="button" class="btn btn-primary" onclick="requestSkillCheck()">Skill Check</button>
+        </div>
+        <div class="form-group">
+          <label>ignore</label>
+          <p class="text-success" id="raise-rate">26%</p>
+        </div>
+      </form>
+    </div>
+    <div class="col-10 bg-dark" id="canvasWrapper">
       <canvas id="canvas" width="800" height="600"></canvas>
     </div>
+    <div class="col-2 p-0 m-0 bg-dark">IF YOU SEE THIS IT'S BAD</div>
   </div>
-
   <div class="col-2 navbar-inverse Sidebar bg-light d-flex p-0 m-0">
     <div class="d-flex flex-column" width="100%">
       <div class="p-2 flex-grow-1"> </div>

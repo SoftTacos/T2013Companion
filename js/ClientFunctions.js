@@ -1,9 +1,13 @@
 
+canvas = document.getElementById("canvas")
+cc = canvas.getContext("2d")
+
 chatButton = document.getElementById("chatButton")
 chatButton.addEventListener("click", sendChat)
 chatInput = document.getElementById("chatInput")
 chatbox = document.getElementById("chatbox")
 
+//HELPER/GENERAL FUNCTIONS
 var decoder = new TextDecoder("utf-8")
 var toType = function (obj) {//from: http://javascriptweblog.wordpress.com/2011/08/08/fixing-the-javascript-typeof-operator/
   return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
@@ -22,8 +26,9 @@ function decodeResponse(event) {
   return { "type": data[0], "message": decoder.decode(data.slice(1)) }
 }
 
+//CHAT FUNCTIONS
 function requestOldChatMessages() {
-  encReq = encodeRequest(1, "")
+  encReq = encodeRequest(10, "")
   if (encReq != null)
     socket.send(encReq)
 }
@@ -52,10 +57,19 @@ function sendChat() {
     return
   console.log("SENDING CHAT")
   chatInput.value = ""
-  encReq = encodeRequest(2, message)
+  encReq = encodeRequest(11, message)
   if (encReq != null)
     socket.send(encReq)
 }
+
+function sendRequest(messageType, message){
+
+}
+
+//CANVAS/MAP COMMANDS
+
+
+//SOCKET EVENTS
 //https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent
 socket.onmessage = function (event) {
   response = decodeResponse(event)

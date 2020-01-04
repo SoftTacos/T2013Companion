@@ -8,8 +8,8 @@ import (
 )
 
 type GameRequest struct {
-	RequestType uint8
-	MessageType int
+	RequestType uint8 //used by router to multiplex to various functions
+	MessageType int   //used by the socket to determine the raw data's format, almost always going to be websocket.BinaryMessage
 	Message     []byte
 	Client      *Client
 }
@@ -17,7 +17,7 @@ type GameRequest struct {
 type GameServer struct {
 	Clients      map[uint]*Client
 	NextClientID uint
-	DM           *Client
+	//DM           *Client
 	Requests     chan *GameRequest
 	ChatMessages *list.List
 }
@@ -30,9 +30,10 @@ func (gs *GameServer) AddClient(char *Character, ws *websocket.Conn) {
 		requests:   gs.Requests,
 		gameServer: gs,
 	}
-	if char == nil {
+	if char == nil { //DM
+		newClient.ID = uint(0)
 		gs.Clients[0] = newClient
-	} else {
+	} else { //Player
 		gs.Clients[gs.NextClientID] = newClient
 		gs.NextClientID++
 	}
@@ -67,45 +68,6 @@ func (gs *GameServer) Handle() {
 	}
 }
 
-func (gs *GameServer) RemoveClient(client *Client) {
-	if gs.DM == client {
-
-	}
-}
-
-var RequestRoutingMap = map[uint8]func(*GameRequest, *GameServer){
-	0: skillCheck,
-	1: getAllChatMessages,
-	2: sendChatMessage,
-}
-
-func skillCheck(gr *GameRequest, gs *GameServer) {
-
-}
-
-func getAllChatMessages(gr *GameRequest, gs *GameServer) {
-	if gs.ChatMessages.Len() == 0 {
-		return
-	}
-	messages := []byte{}
-	for e := gs.ChatMessages.Front(); e != nil; e = e.Next() {
-		message := append(e.Value.([]byte), []byte(",")...)
-		fmt.Println(message)
-		messages = append(messages, message...)
-	}
-	sendResponse(EncodeResponse(1, messages[0:len(messages)-1], gr.MessageType), gr.Client)
-}
-
-func sendChatMessage(gr *GameRequest, gs *GameServer) {
-	//add chat message to chat messages
-	fmt.Println(gr.Message)
-	gs.ChatMessages.PushBack(gr.Message)
-	//send message to everyone
-	for _, client := range gs.Clients {
-		sendResponse(EncodeResponse(2, gr.Message, gr.MessageType), client)
-	}
-}
-
 func EncodeResponse(responseType uint8, message []byte, messageType int) []byte {
 	/*response := make([]byte, len(message)+2)
 	binary.LittleEndian.PutUint16(response[0:], responseType)
@@ -127,17 +89,7 @@ func sendResponse(response []byte, client *Client) {
 
 }
 
-/*
-//this might not be needed after all
-func (pc *Client) writer() {
-	for {
-		select {
-		case response := <-pc.responses:
-			if err := pc.conn.WriteMessage(1, response); err != nil {
-				fmt.Println(err)
-				continue
-			}
-		}
-	}
+func compileAllConnectedClients() []byte {
+	fmt.Println("TODO")
+	return []byte("")
 }
-*/

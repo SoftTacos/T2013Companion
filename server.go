@@ -34,6 +34,8 @@ func LoadPages() {
 	pages["SkillChartElement"] = LoadTextFile("pages\\SkillChartElement.html")
 	pages["StatusChart"] = LoadTextFile("pages\\StatusChart.html")
 	pages["CharacterCard"] = LoadTextFile("pages\\CharacterCard.html")
+	pages["StatSkillDropdownItem"] = LoadTextFile("pages\\StatSkillDropdownItem.html")
+
 	pages["ClientFunctions.js"] = LoadTextFile("js\\ClientFunctions.js")
 	pages["DMFunctions.js"] = LoadTextFile("js\\DMFunctions.js")
 	pages["PlayerFunctions.js"] = LoadTextFile("js\\PlayerFunctions.js")
@@ -105,8 +107,30 @@ func CharacterPage(w http.ResponseWriter, r *http.Request) {
 	page = bytes.Replace(page, []byte("##CURRENT_WEAPON##"), generateCurrentWeaponCard(charData.CurrentWeapon), 1)
 	page = bytes.Replace(page, []byte("##ITEMS##"), generateHtmlItemList(charData), 1)
 	page = bytes.Replace(page, []byte("##STATUSCHART##"), pages["StatusChart"], 1)
+	//page = bytes.Replace(page, []byte("##STATDROPDOWN##"), generateStatDropDowns(charData), 1)
+	//page = bytes.Replace(page, []byte("##SKILLDROPDOWN##"), generateSkillDropDowns(charData), 1)
 
 	fmt.Fprintf(w, string(page))
+}
+
+func generateStatDropDowns(char *Character) []byte {
+	list := make([]byte, 450)
+	for _, stat := range rules.StatNames {
+		list = append(list, generateDropdownItem([]byte(stat))...)
+	}
+	return list
+}
+
+func generateSkillDropDowns(char *Character) []byte {
+	list := make([]byte, 450)
+	for _, skill := range rules.SkillNames {
+		list = append(list, generateDropdownItem([]byte(skill))...)
+	}
+	return list
+}
+
+func generateDropdownItem(name []byte) []byte {
+	return bytes.Replace(pages["StatSkillDropdownItem"], []byte("##NAME##"), name, 1)
 }
 
 func generateStatChart(char *Character) []byte {
@@ -122,7 +146,7 @@ func generateSkillChart(char *Character) []byte {
 	chart := make([]byte, len(pages["SkillChartElement"])*30)
 	for _, skillName := range rules.SkillNames {
 		element := pages["SkillChartElement"]
-		element = bytes.Replace(element, []byte("##SKILLNAME##"), []byte(skillName), 1)
+		element = bytes.Replace(element, []byte("##SKILLNAME##"), []byte(skillName), 2)
 		skill := strconv.FormatUint(uint64(char.Skills[skillName]), 8)
 		element = bytes.Replace(element, []byte("##SKILL##"), []byte(skill), 1)
 		chart = append(chart, element...)

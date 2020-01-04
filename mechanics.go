@@ -6,8 +6,20 @@ import (
 	"sort"
 )
 
-func SkillCheck(skillname string) int {
-	return 0
+func SkillCheck(statName string, skillName string, char *Character, difficulty int) int {
+	mos := 0 //MOS = margin of success
+
+	return mos
+}
+
+func StatCheck(statName string, char *Character, difficulty int) int {
+	//MOS = margin of success
+	//2d20 VS TN+Difficulty; TN=target number; you want to be below the TN+DIFF
+	roll := advantage(nd20(2)) //all stat checks are 2d20L
+	//roll <= TN+diff
+	TN := int(char.Stats[statName]) + difficulty
+	//mos := TN - roll
+	return TN - int(roll)
 }
 
 func advantage(rolls []uint8) uint8 {

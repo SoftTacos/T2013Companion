@@ -31,6 +31,7 @@ type Rules struct {
 	SkillLevelMap map[uint8]uint8  //skill level to #d20 to roll: 25->2d20
 	StatNames     []string         //not sure where to put this so it goes in rules for now
 	SkillNames    []string
+	SkillStatMap  map[string]string
 	TurnActions   map[uint]func(*Turn) //
 }
 

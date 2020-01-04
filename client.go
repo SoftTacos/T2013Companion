@@ -6,6 +6,9 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+//Client wraps a connection with relavent information about the connection and it's related player/character
+//Client listens to requests from the player/character and pushes them to the GameServer
+//The GameServer pushes responses to the client connection directly for simplicity, this might change in the future
 type Client struct {
 	ID         uint
 	conn       *websocket.Conn
@@ -40,11 +43,6 @@ func (c *Client) listener() {
 			Client:      c,
 		}
 
-		//testBytes := make([]byte, 16)
-		//binary.LittleEndian.PutUint16(testBytes[0:], uint16(12))
-		//testBytes[2:] = [12]byte{`0`, `1`}
-		//testreq, testdata := ParseRequest(websocket.TextMessage, testBytes)
-		//fmt.Println("TEST: ", testreq, testdata)
 	}
 	//client has closed the connection
 	fmt.Println("Client has closed the connection: ", c.ID)
@@ -62,4 +60,25 @@ rrt := rawMsg[0:2]
 fmt.Println("RAW: ", rrt)
 requestType := binary.LittleEndian.Uint16(rrt)
 fmt.Println("TYPE: ", requestType)
+*/
+
+//testBytes := make([]byte, 16)
+//binary.LittleEndian.PutUint16(testBytes[0:], uint16(12))
+//testBytes[2:] = [12]byte{`0`, `1`}
+//testreq, testdata := ParseRequest(websocket.TextMessage, testBytes)
+//fmt.Println("TEST: ", testreq, testdata)
+
+/*
+//this might not be needed after all
+func (pc *Client) writer() {
+	for {
+		select {
+		case response := <-pc.responses:
+			if err := pc.conn.WriteMessage(1, response); err != nil {
+				fmt.Println(err)
+				continue
+			}
+		}
+	}
+}
 */
